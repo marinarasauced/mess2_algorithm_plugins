@@ -2,6 +2,7 @@
 #define MESS2_ALGORITHM_PLUGINS_EDGE_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
+
 #include "mess2_algorithm_plugins/graph/vertex.hpp"
 
 namespace mess2_algorithms

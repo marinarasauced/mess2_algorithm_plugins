@@ -4,16 +4,13 @@
 
 namespace mess2_algorithms
 {
-    Graph::Graph(const arma::mat& x_mesh, const arma::mat& y_mesh)
-    {
-        (void) fill_graph(x_mesh, y_mesh);
-    }
+    Graph::Graph() {};
 
-    std::vector<Vertex> Graph::get_vertices_() {
+    std::vector<Vertex> Graph::get_vertices_() const {
         return vertices_;
     }
 
-    std::vector<Edge> Graph::get_edges_() {
+    std::vector<Edge> Graph::get_edges_() const {
         return edges_;
     }
 
@@ -40,9 +37,9 @@ namespace mess2_algorithms
 
     Graph generate_graph(const arma::mat& x_mesh, const arma::mat& y_mesh)
     {
-        auto graph = Graph(x_mesh, y_mesh);
-        return graph;
+        auto _graph = Graph();
+        _graph.fill_graph(x_mesh, y_mesh);
+        return _graph;
     }
-    
 
 } // namespace mess2_algorithms
