@@ -5,8 +5,8 @@ namespace mess2_algorithms
 {
     LowLevelHistory::LowLevelHistory() {};
 
-    void LowLevelHistory::history_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history) {
-        history_.emplace_back(low_level_history{score, time, index_parent, index_history});
+    void LowLevelHistory::history_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const std::string& type) {
+        history_.emplace_back(low_level_history{score, time, index_parent, index_history, type});
     }
 
     void LowLevelHistory::history_clear() {

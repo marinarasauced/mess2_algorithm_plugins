@@ -14,7 +14,9 @@ namespace mess2_algorithms
         Graph();
 
         std::vector<Vertex> get_vertices_() const;
+        Vertex get_vertex_(const int64_t& index_vertex);
         std::vector<Edge> get_edges_() const;
+        Edge get_edge_(const int64_t& index_edge);
 
         void print_vertices() const;
         void print_edges() const;

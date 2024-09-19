@@ -18,12 +18,13 @@ namespace mess2_algorithms
     public:
         LowLevelSearch(const Graph& graph);
 
-        void reset_history();
-        void reset_queue();
+        void execute_low_level_search(const int64_t& index_source, const int64_t& index_target);
 
     private:
         Graph graph_;
-        Adjacency adjacency_;
+        Adjacency adjacency_wait_;
+        Adjacency adjacency_rotate_;
+        Adjacency adjacency_translate_;
         LowLevelHistory history_;
         LowLevelQueue queue_;
     };

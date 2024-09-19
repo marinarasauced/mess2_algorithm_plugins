@@ -10,6 +10,10 @@ namespace mess2_algorithms
         return adjacency_;
     }
 
+    std::vector<int64_t> Adjacency::get_adjacencies(const int64_t& index_parent) {
+        return adjacency_[index_parent];
+    }
+
     void Adjacency::print_adjacencies() const {
         for (int64_t iter = 0; iter < static_cast<int64_t>(adjacency_.size()); ++iter) {
             std::cout << "node " << iter << " -> ";
@@ -24,21 +28,41 @@ namespace mess2_algorithms
         }
     }
 
-    void Adjacency::fill_adjacency(const Graph& graph)
+    void Adjacency::fill_adjacency(const Graph& graph, const std::string& type_fill)
     {
-        const auto edges = graph.get_edges_();
-        for (const auto& edge : edges) {
-            const auto index_parent = edge.get_index_parent_();
-            const auto index_child = edge.get_index_child_();
+        const bool is_wait = (type_fill=="wait");
+        const bool is_rotate = (type_fill=="rotate");
+        const bool is_translate = (type_fill=="translate");
 
-            adjacency_[index_parent].emplace_back(index_child);
+        const auto edges = graph.get_edges_();
+        for (int64_t iter = 0; iter < static_cast<int64_t>(edges.size()); ++iter) {
+            const auto edge = edges[iter];
+            const auto index_parent = edge.get_index_parent_();
+            const auto type = edge.get_type_();
+
+            if (is_wait) {
+                // after wait : wait, rotate, translate
+                adjacency_[index_parent].emplace_back(iter);
+            } else if (is_rotate && type=="translate") {
+                // after rotate : translate
+                adjacency_[index_parent].emplace_back(iter);
+            } else if (is_translate) {
+                // after translate : wait, rotate, translate
+                adjacency_[index_parent].emplace_back(iter);
+            }
         }
+        // for (const auto& edge : edges) {
+        //     const auto index_parent = edge.get_index_parent_();
+        //     const auto index_child = edge.get_index_child_();
+
+        //     adjacency_[index_parent].emplace_back(index_child);
+        // }
     }
 
-    Adjacency generate_adjacency(const Graph& graph)
+    Adjacency generate_adjacency(const Graph& graph, const std::string& type)
     {
         auto _adjacency = Adjacency();
-        _adjacency.fill_adjacency(graph);
+        _adjacency.fill_adjacency(graph, type);
         return _adjacency;
     }
 

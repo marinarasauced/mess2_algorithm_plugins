@@ -4,10 +4,11 @@
 
 namespace mess2_algorithms
 {
-    Edge::Edge(const int64_t& index_parent, const int64_t& index_child)
+    Edge::Edge(const int64_t& index_parent, const int64_t& index_child, const std::string& type)
     {
         index_parent_ = index_parent;
         index_child_ = index_child;
+        type_ = type;
     }
 
     int64_t Edge::get_index_parent_() const {
@@ -16,6 +17,10 @@ namespace mess2_algorithms
 
     int64_t Edge::get_index_child_() const {
         return index_child_;
+    }
+
+    std::string Edge::get_type_() const {
+        return type_;
     }
 
     std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices)
@@ -33,11 +38,13 @@ namespace mess2_algorithms
 
                 if (jter + 1 < n_cols) {
                     std::pair<double, double> pair_ne = {x_mesh(iter, jter + 1), y_mesh(iter, jter + 1)};
+                    
                     pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_ne));
                 }
 
                 if (iter + 1 < n_rows) {
                     std::pair<double, double> pair_sw = {x_mesh(iter + 1, jter), y_mesh(iter + 1, jter)};
+                    
                     pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_sw));
                 }
 
@@ -45,7 +52,8 @@ namespace mess2_algorithms
                     std::pair<double, double> pair_ne = {x_mesh(iter, jter + 1), y_mesh(iter, jter + 1)};
                     std::pair<double, double> pair_sw = {x_mesh(iter + 1, jter), y_mesh(iter + 1, jter)};
                     std::pair<double, double> pair_se = {x_mesh(iter + 1, jter + 1), y_mesh(iter + 1, jter + 1)};
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_se));
+                    
+                    // pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_se));
                     pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_ne, pair_sw));
                 }
             }
@@ -74,9 +82,9 @@ namespace mess2_algorithms
                             bool is_same_theta = (vertex_child_theta_ == vertex_parent_theta_);
 
                             if (is_same_x && is_same_y && is_same_theta) {
-                                edges.emplace_back(Edge(iter, jter));
+                                edges.emplace_back(Edge(iter, jter, "wait"));
                             } else if (is_same_x && is_same_y && !is_same_theta) {
-                                edges.emplace_back(Edge(iter, jter));
+                                edges.emplace_back(Edge(iter, jter, "rotate"));
                             } else if (is_same_theta) {
                                 auto theta_vertices = vertex_parent_theta_;
                                 auto theta_true = (180.0 / M_PI) * std::atan2(
@@ -87,7 +95,7 @@ namespace mess2_algorithms
                                     theta_true += 360;
                                 }
                                 if (theta_true == theta_vertices) {
-                                    edges.emplace_back(Edge(iter, jter));
+                                    edges.emplace_back(Edge(iter, jter, "translate"));
                                 }
                             }
                         }

@@ -10,6 +10,7 @@ namespace mess2_algorithms
         double time;
         int64_t index_parent;
         int64_t index_history;
+        std::string type;
     };
 
     class LowLevelHistory
@@ -17,7 +18,7 @@ namespace mess2_algorithms
     public:
         LowLevelHistory();
 
-        void history_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history);
+        void history_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const std::string& type);
         void history_clear();
         low_level_history history_lookup(const int64_t& index_history);
     

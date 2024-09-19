@@ -28,7 +28,9 @@ namespace mess2_algorithms
 
         void queue_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history);
         void queue_clear();
-        low_level_queue queue_lookup();    
+        low_level_queue queue_lookup();   
+
+        bool is_empty(); 
     
     private:
         void queue_pop();

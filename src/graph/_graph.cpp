@@ -10,8 +10,16 @@ namespace mess2_algorithms
         return vertices_;
     }
 
+    Vertex Graph::get_vertex_(const int64_t& index_vertex) {
+        return vertices_[index_vertex];
+    }
+
     std::vector<Edge> Graph::get_edges_() const {
         return edges_;
+    }
+
+    Edge Graph::get_edge_(const int64_t& index_edge) {
+        return edges_[index_edge];
     }
 
     void Graph::print_vertices() const {

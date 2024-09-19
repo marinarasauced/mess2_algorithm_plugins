@@ -18,7 +18,13 @@ namespace mess2_algorithms
         if (queue_.empty()) {
             throw std::runtime_error("attempt to get from an empty queue.");
         }
-        return queue_.top();
+        const auto queue_top = queue_.top();
+        (void) queue_pop();
+        return queue_top;
+    }
+
+    bool LowLevelQueue::is_empty() {
+        return queue_.empty();
     }
 
     void LowLevelQueue::queue_pop() {

@@ -10,14 +10,16 @@ namespace mess2_algorithms
     class Edge
     {
     public:
-        Edge(const int64_t& index_parent, const int64_t& index_child);
+        Edge(const int64_t& index_parent, const int64_t& index_child, const std::string& type);
 
         int64_t get_index_parent_() const;
         int64_t get_index_child_() const;
+        std::string get_type_() const;
 
     private:
         int64_t index_parent_;
         int64_t index_child_;
+        std::string type_;
     };
 
     std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices);
