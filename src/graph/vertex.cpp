@@ -11,15 +11,15 @@ namespace mess2_algorithms
         theta_ = theta;
     }
 
-    double Vertex::get_x_() const {
+    double Vertex::get_x() const {
         return x_;
     }
 
-    double Vertex::get_y_() const {
+    double Vertex::get_y() const {
         return y_;
     }
 
-    double Vertex::get_theta_() const {
+    double Vertex::get_theta() const {
         return theta_;
     }
 

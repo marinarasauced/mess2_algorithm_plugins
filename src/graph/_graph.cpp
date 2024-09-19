@@ -6,19 +6,19 @@ namespace mess2_algorithms
 {
     Graph::Graph() {};
 
-    std::vector<Vertex> Graph::get_vertices_() const {
+    std::vector<Vertex> Graph::get_vertices() const {
         return vertices_;
     }
 
-    Vertex Graph::get_vertex_(const int64_t& index_vertex) {
+    Vertex Graph::get_vertex(const int64_t& index_vertex) {
         return vertices_[index_vertex];
     }
 
-    std::vector<Edge> Graph::get_edges_() const {
+    std::vector<Edge> Graph::get_edges() const {
         return edges_;
     }
 
-    Edge Graph::get_edge_(const int64_t& index_edge) {
+    Edge Graph::get_edge(const int64_t& index_edge) {
         return edges_[index_edge];
     }
 
@@ -26,14 +26,14 @@ namespace mess2_algorithms
         std::cout << "new row:" << std::endl;
         for (int64_t iter = 0; iter < static_cast<int64_t>(vertices_.size()); ++iter) {
             const auto& vertex = vertices_[iter];
-            std::cout << iter << ": " << vertex.get_x_() << ", " << vertex.get_y_() << ", " << vertex.get_theta_() << std::endl;
+            std::cout << iter << ": " << vertex.get_x() << ", " << vertex.get_y() << ", " << vertex.get_theta() << std::endl;
         }
     }
 
     void Graph::print_edges() const {
         for (int64_t iter = 0; iter < static_cast<int64_t>(edges_.size()); ++iter) {
             const auto& edge = edges_[iter];
-            std::cout << iter << ": " << edge.get_index_parent_() << " to " << edge.get_index_child_() << std::endl;
+            std::cout << iter << ": " << edge.get_index_parent() << " to " << edge.get_index_child() << std::endl;
         }
     }
 

@@ -14,7 +14,7 @@ namespace mess2_algorithms
         return adjacency_[index_parent];
     }
 
-    void Adjacency::print_adjacencies() const {
+    void Adjacency::print_adjacency() const {
         for (int64_t iter = 0; iter < static_cast<int64_t>(adjacency_.size()); ++iter) {
             std::cout << "node " << iter << " -> ";
             if (adjacency_[iter].empty()) {
@@ -34,11 +34,11 @@ namespace mess2_algorithms
         const bool is_rotate = (type_fill=="rotate");
         const bool is_translate = (type_fill=="translate");
 
-        const auto edges = graph.get_edges_();
+        const auto edges = graph.get_edges();
         for (int64_t iter = 0; iter < static_cast<int64_t>(edges.size()); ++iter) {
             const auto edge = edges[iter];
-            const auto index_parent = edge.get_index_parent_();
-            const auto type = edge.get_type_();
+            const auto index_parent = edge.get_index_parent();
+            const auto type = edge.get_type();
 
             if (is_wait) {
                 // after wait : wait, rotate, translate

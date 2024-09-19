@@ -36,7 +36,7 @@ namespace mess2_algorithms
             for (int64_t iter =0; iter < static_cast<int64_t>(adjacencies.size()); ++iter)
             {
                 const auto index_edge = adjacencies[iter];
-                const auto edge = graph_.get_edge_(index_edge);
+                const auto edge = graph_.get_edge(index_edge);
 
                 // auto cost = get_cost_to_transition();
 

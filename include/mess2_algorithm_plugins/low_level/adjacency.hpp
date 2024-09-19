@@ -17,7 +17,7 @@ namespace mess2_algorithms
         adjacency get_adjacency() const;
         std::vector<int64_t> get_adjacencies(const int64_t& index_parent);
 
-        void print_adjacencies() const;
+        void print_adjacency() const;
 
         void fill_adjacency(const Graph& graph, const std::string& type);
 

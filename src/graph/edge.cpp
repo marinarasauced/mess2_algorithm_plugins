@@ -11,15 +11,15 @@ namespace mess2_algorithms
         type_ = type;
     }
 
-    int64_t Edge::get_index_parent_() const {
+    int64_t Edge::get_index_parent() const {
         return index_parent_;
     }
 
-    int64_t Edge::get_index_child_() const {
+    int64_t Edge::get_index_child() const {
         return index_child_;
     }
 
-    std::string Edge::get_type_() const {
+    std::string Edge::get_type() const {
         return type_;
     }
 
@@ -64,16 +64,16 @@ namespace mess2_algorithms
             const auto vertex_2 = pair.second;
             for (int64_t iter = 0; iter < static_cast<int64_t>(vertices.size()); ++iter) {
                 const auto vertex_parent = vertices[iter];
-                auto vertex_parent_x_ = vertex_parent.get_x_();
-                auto vertex_parent_y_ = vertex_parent.get_y_();
-                auto vertex_parent_theta_ = vertex_parent.get_theta_();
+                auto vertex_parent_x_ = vertex_parent.get_x();
+                auto vertex_parent_y_ = vertex_parent.get_y();
+                auto vertex_parent_theta_ = vertex_parent.get_theta();
                 bool match_parent_to_1 = (vertex_parent_x_ == vertex_1.first && vertex_parent_y_ == vertex_1.second);
                 if (match_parent_to_1) {
                     for (int64_t jter = 0; jter < static_cast<int64_t>(vertices.size()); ++jter) {
                         const auto vertex_child = vertices[jter];
-                        auto vertex_child_x_ = vertex_child.get_x_();
-                        auto vertex_child_y_ = vertex_child.get_y_();
-                        auto vertex_child_theta_ = vertex_child.get_theta_();
+                        auto vertex_child_x_ = vertex_child.get_x();
+                        auto vertex_child_y_ = vertex_child.get_y();
+                        auto vertex_child_theta_ = vertex_child.get_theta();
                         bool match_child_to_2 = (vertex_child_x_ == vertex_2.first && vertex_child_y_ == vertex_2.second);
                         if (match_child_to_2) {
 

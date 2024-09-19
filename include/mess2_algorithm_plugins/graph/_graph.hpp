@@ -13,10 +13,10 @@ namespace mess2_algorithms
     public:
         Graph();
 
-        std::vector<Vertex> get_vertices_() const;
-        Vertex get_vertex_(const int64_t& index_vertex);
-        std::vector<Edge> get_edges_() const;
-        Edge get_edge_(const int64_t& index_edge);
+        std::vector<Vertex> get_vertices() const;
+        Vertex get_vertex(const int64_t& index_vertex);
+        std::vector<Edge> get_edges() const;
+        Edge get_edge(const int64_t& index_edge);
 
         void print_vertices() const;
         void print_edges() const;

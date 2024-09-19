@@ -6,7 +6,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-# find_package(yaml-cpp REQUIRED)
 
 include_directories(include)
 
@@ -19,10 +18,11 @@ add_library(llhistory SHARED src/low_level/history.cpp)
 add_library(llqueue SHARED src/low_level/queue.cpp)
 add_library(_low_level SHARED src/low_level/_low_level.cpp)
 
+add_library(actor SHARED src/actor.cpp)
 add_library(utils SHARED src/utils.cpp)
 
 install(
-  TARGETS edge vertex _graph adjacency llhistory llqueue _low_level utils
+  TARGETS edge vertex _graph adjacency llhistory llqueue _low_level actor utils
   EXPORT export_mess2_algorithm_plugins
   LIBRARY DESTINATION lib
 )
