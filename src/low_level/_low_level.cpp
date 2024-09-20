@@ -3,11 +3,14 @@
 
 namespace mess2_algorithms
 {
-    LowLevelSearch::LowLevelSearch(const Graph& graph, const Actor& actor) {
+    LowLevelSearch::LowLevelSearch(const Graph& graph, Actor& actor, const std::vector<double>& threat) {
         graph_ = graph;
         adjacency_wait_ = generate_adjacency(graph, "wait");
         adjacency_rotate_ = generate_adjacency(graph, "rotate");
         adjacency_translate_ = generate_adjacency(graph, "translate");
+
+        actor_ = actor; // actor defined before low level search and filled in low level search
+        actor_.fill_actor(graph, threat);
     }
 
     void LowLevelSearch::execute_low_level_search(const int64_t& index_source, const int64_t& index_target)
@@ -26,17 +29,18 @@ namespace mess2_algorithms
 
             std::vector<int64_t> adjacencies;
             if (last.type=="wait") {
-                const auto adjacencies = adjacency_wait_.get_adjacencies(curr.index_parent);
+                adjacencies = adjacency_wait_.get_adjacencies(curr.index_parent);
             } else if (last.type=="rotate") {
-                const auto adjacencies = adjacency_rotate_.get_adjacencies(curr.index_parent);
+                adjacencies = adjacency_rotate_.get_adjacencies(curr.index_parent);
             } else if (last.type=="translate") {
-                const auto adjacencies = adjacency_translate_.get_adjacencies(curr.index_parent);
+                adjacencies = adjacency_translate_.get_adjacencies(curr.index_parent);
             }
 
-            for (int64_t iter =0; iter < static_cast<int64_t>(adjacencies.size()); ++iter)
+            for (int64_t iter = 0; iter < static_cast<int64_t>(adjacencies.size()); ++iter)
             {
                 const auto index_edge = adjacencies[iter];
-                const auto edge = graph_.get_edge(index_edge);
+                auto [ds, dt] = actor_.get_cost_to_transition(index_edge);
+                
 
                 // auto cost = get_cost_to_transition();
 

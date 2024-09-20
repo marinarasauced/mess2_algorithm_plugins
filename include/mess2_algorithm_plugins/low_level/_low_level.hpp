@@ -18,7 +18,7 @@ namespace mess2_algorithms
     class LowLevelSearch
     {
     public:
-        LowLevelSearch(const Graph& graph, const Actor& actor);
+        LowLevelSearch(const Graph& graph, Actor& actor, const std::vector<double>& threat);
 
         void execute_low_level_search(const int64_t& index_source, const int64_t& index_target);
 
@@ -29,6 +29,7 @@ namespace mess2_algorithms
         Adjacency adjacency_translate_;
         LowLevelHistory history_;
         LowLevelQueue queue_;
+        Actor actor_;
     };
 
 } // namespace mess2_algorithms

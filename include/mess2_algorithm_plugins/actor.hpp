@@ -12,13 +12,14 @@ namespace mess2_algorithms
     class Actor
     {
     public:
-        Actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
+        Actor();
 
         double get_time_to_wait();
         double get_time_to_rotate(const Vertex& vertex_parent, const Vertex& vertex_child);
         double get_time_to_translate(const Vertex& vertex_parent, const Vertex& vertex_child);
         std::tuple<double, double> get_cost_to_transition(const int64_t& index_edge);
 
+        void define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
         void fill_actor(const Graph& graph, const std::vector<double>& threat);
 
     private:

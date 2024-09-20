@@ -3,16 +3,7 @@
 
 namespace mess2_algorithms
 {
-    Actor::Actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius)
-    {
-        k_ang_ = k_ang;
-        k_lin_ = k_lin;
-        x_tol_ang_ = x_tol_ang;
-        x_tol_lin_ = x_tol_lin;
-        u_max_ang_ = u_max_ang;
-        u_max_lin_ = u_max_lin;
-        radius_ = radius;
-    };
+    Actor::Actor() {};
 
     double Actor::get_time_to_wait() {
         return 1.0;
@@ -140,6 +131,17 @@ namespace mess2_algorithms
 
             times_[iter] = time;
         }
+    }
+
+    void Actor::define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius)
+    {
+        k_ang_ = k_ang;
+        k_lin_ = k_lin;
+        x_tol_ang_ = x_tol_ang;
+        x_tol_lin_ = x_tol_lin;
+        u_max_ang_ = u_max_ang;
+        u_max_lin_ = u_max_lin;
+        radius_ = radius;
     }
 
     void Actor::fill_actor(const Graph& graph, const std::vector<double>& threat)
