@@ -3,7 +3,7 @@
 
 namespace mess2_algorithms
 {
-    LowLevelSearch::LowLevelSearch(const Graph& graph) {
+    LowLevelSearch::LowLevelSearch(const Graph& graph, const Actor& actor) {
         graph_ = graph;
         adjacency_wait_ = generate_adjacency(graph, "wait");
         adjacency_rotate_ = generate_adjacency(graph, "rotate");

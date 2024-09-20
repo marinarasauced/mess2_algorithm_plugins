@@ -11,12 +11,14 @@
 #include "mess2_algorithm_plugins/low_level/history.hpp"
 #include "mess2_algorithm_plugins/low_level/queue.hpp"
 
+#include "mess2_algorithm_plugins/actor.hpp"
+
 namespace mess2_algorithms
 {
     class LowLevelSearch
     {
     public:
-        LowLevelSearch(const Graph& graph);
+        LowLevelSearch(const Graph& graph, const Actor& actor);
 
         void execute_low_level_search(const int64_t& index_source, const int64_t& index_target);
 
