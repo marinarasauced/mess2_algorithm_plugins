@@ -22,8 +22,9 @@ namespace mess2_algorithms
         void define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
         void fill_actor(const Graph& graph, const std::vector<double>& threat);
 
-    private:
+        std::vector<double> get_scores();
 
+    private:
         void fill_occupancies_by_vertex(const std::vector<Vertex>& vertices, const double& radius);
         void fill_scores_by_edges(const std::vector<Edge>& edges,const std::vector<double>& threat);
         void fill_times_by_edges(const std::vector<Edge>& edges, const std::vector<Vertex>& vertices);

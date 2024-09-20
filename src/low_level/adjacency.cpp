@@ -34,6 +34,9 @@ namespace mess2_algorithms
         const bool is_rotate = (type_fill=="rotate");
         const bool is_translate = (type_fill=="translate");
 
+        const auto vertices = graph.get_vertices();
+        adjacency_.resize(vertices.size());
+
         const auto edges = graph.get_edges();
         for (int64_t iter = 0; iter < static_cast<int64_t>(edges.size()); ++iter) {
             const auto edge = edges[iter];

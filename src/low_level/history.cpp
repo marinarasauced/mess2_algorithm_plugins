@@ -20,4 +20,8 @@ namespace mess2_algorithms
         return history_[index_history];
     }
 
+    int64_t LowLevelHistory::history_size() {
+        return static_cast<int64_t>(history_.size());
+    }
+
 } // namespace mess2_algorithms

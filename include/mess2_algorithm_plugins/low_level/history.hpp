@@ -21,6 +21,7 @@ namespace mess2_algorithms
         void history_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const std::string& type);
         void history_clear();
         low_level_history history_lookup(const int64_t& index_history);
+        int64_t history_size();
     
     private:
         std::vector<low_level_history> history_;

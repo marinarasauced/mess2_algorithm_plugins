@@ -56,7 +56,7 @@ namespace mess2_algorithms
         const auto score = scores_[index_edge];
         const auto time = times_[index_edge];
 
-        return std::tuple<double, double>{score, time};
+        return std::tuple<double, double>{score * time, time};
     }
 
     void Actor::fill_occupancies_by_vertex(const std::vector<Vertex>& vertices, const double& radius)
@@ -153,5 +153,10 @@ namespace mess2_algorithms
         (void) fill_scores_by_edges(edges, threat);
         (void) fill_times_by_edges(edges, vertices);
     }
+
+    std::vector<double> Actor::get_scores() {
+        return scores_;
+    }
+    
 
 } // namespace mess2_algorithms

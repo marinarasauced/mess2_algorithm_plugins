@@ -1,6 +1,7 @@
 #ifndef MESS2_ALGORITHM_PLUGINS_COMMON_HPP
 #define MESS2_ALGORITHM_PLUGINS_COMMON_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
