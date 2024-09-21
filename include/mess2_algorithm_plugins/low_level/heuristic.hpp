@@ -16,10 +16,8 @@ namespace mess2_algorithms
         double heuristic_lookup(const int64_t index_heuristic);
 
     private:
-        std::vector<double> distances_;     // octile distances
+        std::vector<double> distances_;
     };
-
-    Heuristic generate_heuristic(const Graph& graph, const std::string& type);
 
 } // namespace mess2_algorithms
 
