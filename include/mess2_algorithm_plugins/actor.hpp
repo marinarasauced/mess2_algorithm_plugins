@@ -2,7 +2,6 @@
 #define MESS2_ALGORITHM_PLUGINS_ACTOR_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-
 #include "mess2_algorithm_plugins/graph/_graph.hpp"
 
 namespace mess2_algorithms
@@ -20,15 +19,15 @@ namespace mess2_algorithms
         std::tuple<double, double> get_cost_to_transition(const int64_t& index_edge);
 
         void define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
+
+        void fill_occupancies_by_vertex(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices);
+        void fill_scores_by_edges(const std::vector<Edge>& edges, const std::vector<double>& threat);
+        void fill_times_by_edges(const std::vector<Edge>& edges, const std::vector<Vertex>& vertices);
         void fill_actor(const Graph& graph, const std::vector<double>& threat);
 
         std::vector<double> get_scores();
 
     private:
-        void fill_occupancies_by_vertex(const std::vector<Vertex>& vertices, const double& radius);
-        void fill_scores_by_edges(const std::vector<Edge>& edges,const std::vector<double>& threat);
-        void fill_times_by_edges(const std::vector<Edge>& edges, const std::vector<Vertex>& vertices);
-
         occupancy occupancies_;
         std::vector<double> scores_;
         std::vector<double> times_;
@@ -41,6 +40,8 @@ namespace mess2_algorithms
         double u_max_lin_;
         double radius_;
     };
+
+    Actor generate_actor_turtlebot3(const std::string& turtlebot3_model, const double& u_ratio, const double& r_ratio);
 
 } // namespace mess2_algorithms
 

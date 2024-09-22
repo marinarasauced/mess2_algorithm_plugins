@@ -2,7 +2,6 @@
 #define MESS2_ALGORITHM_PLUGINS_HEURISTIC_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-
 #include "mess2_algorithm_plugins/graph/_graph.hpp"
 
 namespace mess2_algorithms
@@ -12,8 +11,8 @@ namespace mess2_algorithms
     public:
         Heuristic();
 
-        void heuristic_fill(const std::vector<double>& scores, const Graph& graph, const int64_t index_target);
-        double heuristic_lookup(const int64_t index_heuristic);
+        void fill_heuristic(const std::vector<double>& scores, const Graph& graph, const int64_t index_target);
+        double lookup_heuristic(const int64_t index_heuristic);
 
     private:
         std::vector<double> distances_;

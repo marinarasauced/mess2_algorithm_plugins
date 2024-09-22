@@ -2,16 +2,11 @@
 #define MESS2_ALGORITHM_PLUGINS_LOW_LEVEL_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-
-#include "mess2_algorithm_plugins/graph/edge.hpp"
-#include "mess2_algorithm_plugins/graph/vertex.hpp"
 #include "mess2_algorithm_plugins/graph/_graph.hpp"
-
 #include "mess2_algorithm_plugins/low_level/adjacency.hpp"
 #include "mess2_algorithm_plugins/low_level/heuristic.hpp"
 #include "mess2_algorithm_plugins/low_level/history.hpp"
 #include "mess2_algorithm_plugins/low_level/queue.hpp"
-
 #include "mess2_algorithm_plugins/actor.hpp"
 
 namespace mess2_algorithms
@@ -19,11 +14,9 @@ namespace mess2_algorithms
     class LowLevelSearch
     {
     public:
-        LowLevelSearch(const Graph& graph, Actor& actor, const std::vector<double>& threat, const int64_t& index_source, const int64_t& index_target);
+        LowLevelSearch();
 
-        void set_heuristic_admissible();
-        double get_heuristic_to_transition();
-
+        void fill_low_level_search(const Graph& graph, const std::vector<double>& threat, Actor& actor, const int64_t& index_source, const int64_t& index_target);
         void execute_low_level_search();
 
     private:

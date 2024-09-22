@@ -2,7 +2,6 @@
 #define MESS2_ALGORITHM_PLUGINS_ADJACENCY_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-
 #include "mess2_algorithm_plugins/graph/_graph.hpp"
 
 namespace mess2_algorithms

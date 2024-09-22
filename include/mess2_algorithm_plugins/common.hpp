@@ -12,9 +12,11 @@
 #include <limits>
 #include <memory>
 #include <queue>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 #include </usr/include/armadillo>

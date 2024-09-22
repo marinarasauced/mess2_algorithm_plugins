@@ -26,14 +26,14 @@ namespace mess2_algorithms
     public:
         LowLevelQueue();
 
-        void queue_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history);
-        void queue_clear();
-        low_level_queue queue_lookup();   
+        void append_queue(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history);
+        void clear_queue();
+        low_level_queue lookup_queue();   
 
         bool is_empty(); 
     
     private:
-        void queue_pop();
+        void pop_queue();
     
         std::priority_queue<low_level_queue, std::vector<low_level_queue>, low_level_queue_operator> queue_;
     };

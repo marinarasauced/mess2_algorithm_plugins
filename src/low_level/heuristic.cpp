@@ -5,7 +5,7 @@ namespace mess2_algorithms
 {
     Heuristic::Heuristic() {};
 
-    void Heuristic::heuristic_fill(const std::vector<double>& scores, const Graph& graph, const int64_t index_target)
+    void Heuristic::fill_heuristic(const std::vector<double>& scores, const Graph& graph, const int64_t index_target)
     {
         const auto edges = graph.get_edges();
         const auto vertices = graph.get_vertices();
@@ -15,6 +15,8 @@ namespace mess2_algorithms
 
         const auto n_edges = static_cast<int64_t>(edges.size());
         distances_.resize(n_edges);
+
+        std::vector<double> distances(n_edges);
 
         for (int64_t iter = 0; iter < n_edges; ++iter) {
             const auto edge = edges[iter];
@@ -27,18 +29,17 @@ namespace mess2_algorithms
                 std::pow(x_source - x_target, 2) +
                 std::pow(y_source - y_target, 2)
             );
-            distances_[iter] = distance;
+            distances[iter] = distance;
         }
 
-        const auto scale = *std::min_element(distances_.begin(), distances_.end());
+        const auto scale = *std::min_element(distances.begin(), distances.end());
 
         for (int64_t iter = 0; iter < n_edges; ++iter) {
-            const auto distance = distances_[iter];
-            distances_[iter] = distance * (scores[iter] / scale);
+            distances_[iter] = distances[iter] * (scores[iter] / scale);
         }
     }
 
-    double Heuristic::heuristic_lookup(const int64_t index_heuristic) {
+    double Heuristic::lookup_heuristic(const int64_t index_heuristic) {
         return distances_[index_heuristic];
     }
 

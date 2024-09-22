@@ -18,10 +18,10 @@ namespace mess2_algorithms
     public:
         LowLevelHistory();
 
-        void history_append(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const std::string& type);
-        void history_clear();
-        low_level_history history_lookup(const int64_t& index_history);
-        int64_t history_size();
+        void append_history(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const std::string& type);
+        void clear_history();
+        low_level_history lookup_history(const int64_t& index_history);
+        int64_t size_history();
     
     private:
         std::vector<low_level_history> history_;

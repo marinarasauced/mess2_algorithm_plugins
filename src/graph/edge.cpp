@@ -2,6 +2,15 @@
 #include "mess2_algorithm_plugins/common.hpp"
 #include "mess2_algorithm_plugins/graph/edge.hpp"
 
+struct pair_hash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+        return hash1 ^ (hash2 << 1);
+    }
+};
+
 namespace mess2_algorithms
 {
     Edge::Edge(const int64_t& index_parent, const int64_t& index_child, const std::string& type)
@@ -59,46 +68,53 @@ namespace mess2_algorithms
             }
         }
 
+
+        std::unordered_map<std::pair<double, double>, size_t, pair_hash> vertex_map;
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            const auto& vertex = vertices[i];
+            vertex_map[{vertex.get_x(), vertex.get_y()}] = i;
+        }
+
         for (const auto& pair : pairs) {
-            const auto vertex_1 = pair.first;
-            const auto vertex_2 = pair.second;
-            for (int64_t iter = 0; iter < static_cast<int64_t>(vertices.size()); ++iter) {
-                const auto vertex_parent = vertices[iter];
+            const auto& vertex_1 = pair.first;
+            const auto& vertex_2 = pair.second;
+
+            auto parent_iter = vertex_map.find(vertex_1);
+            auto child_iter = vertex_map.find(vertex_2);
+
+            if (parent_iter != vertex_map.end() && child_iter != vertex_map.end()) {
+                size_t iter = parent_iter->second;
+                size_t jter = child_iter->second;
+
+                const auto& vertex_parent = vertices[iter];
+                const auto& vertex_child = vertices[jter];
+
                 auto vertex_parent_x_ = vertex_parent.get_x();
                 auto vertex_parent_y_ = vertex_parent.get_y();
                 auto vertex_parent_theta_ = vertex_parent.get_theta();
-                bool match_parent_to_1 = (vertex_parent_x_ == vertex_1.first && vertex_parent_y_ == vertex_1.second);
-                if (match_parent_to_1) {
-                    for (int64_t jter = 0; jter < static_cast<int64_t>(vertices.size()); ++jter) {
-                        const auto vertex_child = vertices[jter];
-                        auto vertex_child_x_ = vertex_child.get_x();
-                        auto vertex_child_y_ = vertex_child.get_y();
-                        auto vertex_child_theta_ = vertex_child.get_theta();
-                        bool match_child_to_2 = (vertex_child_x_ == vertex_2.first && vertex_child_y_ == vertex_2.second);
-                        if (match_child_to_2) {
+                auto vertex_child_x_ = vertex_child.get_x();
+                auto vertex_child_y_ = vertex_child.get_y();
+                auto vertex_child_theta_ = vertex_child.get_theta();
 
-                            bool is_same_x = (vertex_child_x_ == vertex_parent_x_);
-                            bool is_same_y = (vertex_child_y_ == vertex_parent_y_);
-                            bool is_same_theta = (vertex_child_theta_ == vertex_parent_theta_);
+                bool is_same_x = (vertex_child_x_ == vertex_parent_x_);
+                bool is_same_y = (vertex_child_y_ == vertex_parent_y_);
+                bool is_same_theta = (vertex_child_theta_ == vertex_parent_theta_);
 
-                            if (is_same_x && is_same_y && is_same_theta) {
-                                edges.emplace_back(Edge(iter, jter, "wait"));
-                            } else if (is_same_x && is_same_y && !is_same_theta) {
-                                edges.emplace_back(Edge(iter, jter, "rotate"));
-                            } else if (is_same_theta) {
-                                auto theta_vertices = vertex_parent_theta_;
-                                auto theta_true = (180.0 / M_PI) * std::atan2(
-                                    vertex_child_y_ - vertex_parent_y_,
-                                    vertex_child_x_ - vertex_parent_x_
-                                );
-                                if (theta_true < 0) {
-                                    theta_true += 360;
-                                }
-                                if (theta_true == theta_vertices) {
-                                    edges.emplace_back(Edge(iter, jter, "translate"));
-                                }
-                            }
-                        }
+                if (is_same_x && is_same_y && is_same_theta) {
+                    edges.emplace_back(Edge(iter, jter, "wait"));
+                } else if (is_same_x && is_same_y && !is_same_theta) {
+                    edges.emplace_back(Edge(iter, jter, "rotate"));
+                } else if (is_same_theta) {
+                    double theta_true = (180.0 / M_PI) * std::atan2(
+                        vertex_child_y_ - vertex_parent_y_,
+                        vertex_child_x_ - vertex_parent_x_
+                    );
+                    if (theta_true < 0) {
+                        theta_true += 360;
+                    }
+
+                    if (theta_true == vertex_parent_theta_) {
+                        edges.emplace_back(Edge(iter, jter, "translate"));
                     }
                 }
             }
