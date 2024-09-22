@@ -2,7 +2,7 @@
 #define MESS2_ALGORITHM_PLUGINS_LOW_LEVEL_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-#include "mess2_algorithm_plugins/graph/_graph.hpp"
+#include "mess2_algorithm_plugins/graph/graph.hpp"
 #include "mess2_algorithm_plugins/low_level/adjacency.hpp"
 #include "mess2_algorithm_plugins/low_level/heuristic.hpp"
 #include "mess2_algorithm_plugins/low_level/history.hpp"

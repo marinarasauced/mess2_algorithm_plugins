@@ -2,7 +2,7 @@
 #define MESS2_ALGORITHM_PLUGINS_HEURISTIC_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-#include "mess2_algorithm_plugins/graph/_graph.hpp"
+#include "mess2_algorithm_plugins/graph/graph.hpp"
 
 namespace mess2_algorithms
 {
