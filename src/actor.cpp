@@ -6,6 +6,15 @@ T clamp(T value, T min_value, T max_value) {
     return std::max(min_value, std::min(value, max_value));
 }
 
+struct pair_hash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+        return hash1 ^ (hash2 << 1);
+    }
+};
+
 namespace mess2_algorithms
 {
     Actor::Actor() {};
@@ -15,8 +24,8 @@ namespace mess2_algorithms
     }
 
     double Actor::get_time_to_rotate(const Vertex& vertex_parent, const Vertex& vertex_child) {
-        const auto theta_parent = vertex_parent.get_theta();
-        const auto theta_child = vertex_child.get_theta();
+        const auto theta_parent = vertex_parent.get_theta() * (M_PI / 180);
+        const auto theta_child = vertex_child.get_theta() * (M_PI / 180);
         auto dtheta = theta_child - theta_parent;
 
         if (dtheta > M_PI) {
@@ -64,7 +73,7 @@ namespace mess2_algorithms
         return std::tuple<double, double>{score * time, time};
     }
 
-    void Actor::fill_occupancies_by_vertex(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices)
+    void Actor::fill_occupancies_by_x_and_y(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph)
     {
         if (x_mesh.n_rows != y_mesh.n_rows || x_mesh.n_cols != y_mesh.n_cols) {
             throw std::runtime_error("x_mesh and y_mesh must have the same dimensions");
@@ -72,12 +81,16 @@ namespace mess2_algorithms
             throw std::runtime_error("radius cannot be less than zero");
         }
 
+        const auto vertices = graph.get_vertices();
+        const auto map_vertices = graph.get_vertices_map();
+
         const int64_t n_rows = x_mesh.n_rows;
         const int64_t n_cols = x_mesh.n_cols;
+        const int64_t n_elem = x_mesh.n_elem;
         const int64_t n_vertices = vertices.size();
 
         occupancies_.clear();
-        occupancies_.resize(n_vertices);
+        occupancies_.reserve(n_elem);
 
         const auto resolution = std::min(x_mesh(0, 1) - x_mesh(0, 0), y_mesh(1, 0) - y_mesh(0, 0));
         const auto steps = static_cast<int64_t>(std::ceil(radius_ / resolution));
@@ -96,7 +109,7 @@ namespace mess2_algorithms
             for (int64_t jter = std::max(int64_t(0), row_index - steps); jter <= std::min(n_rows - 1, row_index + steps); ++jter) {
                 for (int64_t kter = std::max(int64_t(0), col_index - steps); kter <= std::min(n_cols - 1, col_index + steps); ++kter) {
                     const auto x_child = x_mesh(jter, kter);
-                    const auto y_child = x_mesh(jter, kter);
+                    const auto y_child = y_mesh(jter, kter);
 
                     const auto distance = std::sqrt(
                         std::pow(x_parent - x_child, 2) +
@@ -104,15 +117,27 @@ namespace mess2_algorithms
                     );
 
                     if (distance <= radius_) {
-                        occupancies_[iter].emplace_back(jter);
+                        const auto map = map_vertices.find({x_child, y_child});
+                        if (map != map_vertices.end()) {
+                            const std::vector<int64_t> indices = map->second;
+                            const auto index = indices[0];
+
+                            auto& occupancy = occupancies_[{x_parent, y_parent}];
+                            if (std::find(occupancy.begin(), occupancy.end(), index) == occupancy.end()) {
+                                occupancies_[{x_parent, y_parent}].push_back(index);
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    void Actor::fill_scores_by_edges(const std::vector<Edge>& edges, const std::vector<double>& threats)
+    void Actor::fill_scores_by_edges(const Graph& graph, const std::vector<double>& weights)
     {
+        const auto edges = graph.get_edges();
+        const auto vertices = graph.get_vertices();
+
         const auto n_edges = static_cast<int64_t>(edges.size());
         scores_.clear();
         scores_.resize(n_edges);
@@ -120,18 +145,25 @@ namespace mess2_algorithms
         for (int64_t iter = 0; iter < n_edges; ++iter) {
             const auto edge = edges[iter];
             const auto index_child = edge.get_index_child();
+            const auto vertex_child = vertices[index_child];
             
+            const auto found = occupancies_.find({vertex_child.get_x(), vertex_child.get_y()});
+
             double threat = 0.0;
-            for (const auto& occupied : occupancies_[index_child])  {
-                threat += threats[occupied];
+            if (found != occupancies_.end()) {
+                for (const auto& index : found->second) {
+                    threat = threat + weights[index];
+                }
             }
-            
             scores_[iter] = threat;
         }
     }
 
-    void Actor::fill_times_by_edges(const std::vector<Edge>& edges, const std::vector<Vertex>& vertices)
+    void Actor::fill_times_by_edges(const Graph& graph)
     {
+        const auto edges = graph.get_edges();
+        const auto vertices = graph.get_vertices();
+
         const auto n_edges = static_cast<int64_t>(edges.size());
         times_.clear();
         times_.resize(n_edges);
@@ -173,11 +205,9 @@ namespace mess2_algorithms
         const auto edges = graph.get_edges();
         const auto vertices = graph.get_vertices();
 
-        std::cout << edges.size() << std::endl;
-
-        (void) fill_occupancies_by_vertex(x_mesh, y_mesh, vertices);
-        (void) fill_scores_by_edges(edges, threat);
-        (void) fill_times_by_edges(edges, vertices);
+        (void) fill_occupancies_by_x_and_y(x_mesh, y_mesh, graph);
+        (void) fill_scores_by_edges(graph, threat);
+        (void) fill_times_by_edges(graph);
     }
 
     std::vector<double> Actor::get_scores() {

@@ -20,6 +20,8 @@ namespace mess2_algorithms
         void fill_low_level_search(const Graph& graph, Actor& actor, const int64_t& index_source, const int64_t& index_target);
         pathplan execute_low_level_search();
 
+        Graph get_graph();
+
     private:
         Graph graph_;
         Adjacency adjacency_wait_;

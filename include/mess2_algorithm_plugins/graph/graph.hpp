@@ -17,13 +17,15 @@ namespace mess2_algorithms
         std::vector<Edge> get_edges() const;
         Edge get_edge(const int64_t& index_edge);
 
+        std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_vertices> get_vertices_map() const;
+
         void print_vertices() const;
         void print_edges() const;
 
         void fill_graph(const arma::mat& x_mesh, const arma::mat& y_mesh);
 
     private:
-    
+        std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_vertices> vertices_map_;
         std::vector<Vertex> vertices_;
         std::vector<Edge> edges_;
     };

@@ -21,7 +21,7 @@ namespace mess2_algorithms
         std::string type_;
     };
 
-    std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices);
+    std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices, std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_vertices> vertices_map);
 
 } // namespace mess2_algorithms
 

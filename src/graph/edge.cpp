@@ -2,15 +2,6 @@
 #include "mess2_algorithm_plugins/common.hpp"
 #include "mess2_algorithm_plugins/graph/edge.hpp"
 
-struct pair_hash {
-    template <typename T1, typename T2>
-    std::size_t operator()(const std::pair<T1, T2>& p) const {
-        auto hash1 = std::hash<T1>{}(p.first);
-        auto hash2 = std::hash<T2>{}(p.second);
-        return hash1 ^ (hash2 << 1);
-    }
-};
-
 namespace mess2_algorithms
 {
     Edge::Edge(const int64_t& index_parent, const int64_t& index_child, const std::string& type)
@@ -32,7 +23,7 @@ namespace mess2_algorithms
         return type_;
     }
 
-    std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices)
+    std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices, std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_vertices> map_vertices)
     {
         std::vector<Edge> edges;
 
@@ -49,29 +40,27 @@ namespace mess2_algorithms
                     std::pair<double, double> pair_ne = {x_mesh(iter, jter + 1), y_mesh(iter, jter + 1)};
                     
                     pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_ne));
+                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_ne, pair_nw));
                 }
 
                 if (iter + 1 < n_rows) {
                     std::pair<double, double> pair_sw = {x_mesh(iter + 1, jter), y_mesh(iter + 1, jter)};
                     
                     pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_sw));
+                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_sw, pair_nw));
                 }
 
                 if (iter + 1 < n_rows && jter + 1 < n_cols) {
                     std::pair<double, double> pair_ne = {x_mesh(iter, jter + 1), y_mesh(iter, jter + 1)};
                     std::pair<double, double> pair_sw = {x_mesh(iter + 1, jter), y_mesh(iter + 1, jter)};
-                    // std::pair<double, double> pair_se = {x_mesh(iter + 1, jter + 1), y_mesh(iter + 1, jter + 1)};
+                    std::pair<double, double> pair_se = {x_mesh(iter + 1, jter + 1), y_mesh(iter + 1, jter + 1)};
                     
-                    // pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_se));
+                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_se));
+                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_se, pair_nw));
                     pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_ne, pair_sw));
+                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_sw, pair_ne));
                 }
             }
-        }
-
-        std::unordered_map<std::pair<double, double>, std::vector<int64_t>, pair_hash> map_vertices;
-        for (int64_t iter = 0; iter < static_cast<int64_t>(vertices.size()); ++iter) {
-            const auto vertex = vertices[iter];
-            map_vertices[{vertex.get_x(), vertex.get_y()}].push_back(iter);
         }
 
         for (const auto& pair : pairs) {
@@ -101,7 +90,7 @@ namespace mess2_algorithms
                         bool is_same_theta = (theta_1 == theta_2);
 
                         if (is_same_x && is_same_y && is_same_theta) {
-                            edges.emplace_back(Edge(index_1, index_2, "wait"));
+                            // edges.emplace_back(Edge(index_1, index_2, "wait"));
                         } else if (is_same_x && is_same_y && !is_same_theta) {
                             edges.emplace_back(Edge(index_1, index_2, "rotate"));
                         } else if (is_same_theta) {
@@ -109,6 +98,7 @@ namespace mess2_algorithms
                                 y_2 - y_1,
                                 x_2 - x_1
                             );
+                            // std::cout << theta_true << std::endl;
                             if (theta_true < 0) {
                                 theta_true += 360;
                             }

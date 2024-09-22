@@ -32,7 +32,11 @@ namespace mess2_algorithms
             distances[iter] = distance;
         }
 
-        const auto scale = *std::min_element(distances.begin(), distances.end());
+        const auto scale = *std::max_element(distances.begin(), distances.end());
+
+        if (scale <= 0.0) {
+            throw std::runtime_error("scale cannot be less than or equal to zero");
+        }
 
         for (int64_t iter = 0; iter < n_edges; ++iter) {
             distances_[iter] = distances[iter] * (scores[iter] / scale);

@@ -22,8 +22,11 @@ namespace mess2_algorithms
         return edges_[index_edge];
     }
 
+    std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_vertices> Graph::get_vertices_map() const {
+        return vertices_map_;
+    }
+
     void Graph::print_vertices() const {
-        std::cout << "new row:" << std::endl;
         for (int64_t iter = 0; iter < static_cast<int64_t>(vertices_.size()); ++iter) {
             const auto& vertex = vertices_[iter];
             std::cout << iter << ": " << vertex.get_x() << ", " << vertex.get_y() << ", " << vertex.get_theta() << std::endl;
@@ -53,7 +56,14 @@ namespace mess2_algorithms
     void Graph::fill_graph(const arma::mat& x_mesh, const arma::mat& y_mesh)
     {
         vertices_ = generate_vertices(x_mesh, y_mesh);
-        edges_ = generate_edges(x_mesh, y_mesh, vertices_);
+        
+        vertices_map_.reserve(x_mesh.n_elem);
+        for (int64_t iter = 0; iter < static_cast<int64_t>(vertices_.size()); ++iter) {
+            const auto vertex = vertices_[iter];
+            vertices_map_[{vertex.get_x(), vertex.get_y()}].push_back(iter);
+        }
+        
+        edges_ = generate_edges(x_mesh, y_mesh, vertices_, vertices_map_);
     }
 
     Graph generate_graph(const arma::mat& x_mesh, const arma::mat& y_mesh)

@@ -4,9 +4,19 @@
 #include "mess2_algorithm_plugins/common.hpp"
 #include "mess2_algorithm_plugins/graph/graph.hpp"
 
+struct hash_occupancies {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        auto hash1 = std::hash<T1>{}(p.first);
+        auto hash2 = std::hash<T2>{}(p.second);
+        return hash1 ^ (hash2 << 1);
+    }
+};
+
 namespace mess2_algorithms
 {
-    using occupancy = std::vector<std::vector<int64_t>>;
+    // using occupancy = std::vector<std::vector<int64_t>>;
+    using occupancy = std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_occupancies>;
 
     class Actor
     {
@@ -20,9 +30,9 @@ namespace mess2_algorithms
 
         void define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
 
-        void fill_occupancies_by_vertex(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices);
-        void fill_scores_by_edges(const std::vector<Edge>& edges, const std::vector<double>& threat);
-        void fill_times_by_edges(const std::vector<Edge>& edges, const std::vector<Vertex>& vertices);
+        void fill_occupancies_by_x_and_y(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph);
+        void fill_scores_by_edges(const Graph& graph, const std::vector<double>& weights);
+        void fill_times_by_edges(const Graph& graph);
         void fill_actor(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph, const std::vector<double>& threat);
 
         std::vector<double> get_scores();

@@ -76,5 +76,9 @@ namespace mess2_algorithms
         return path;
     }
 
+    Graph LowLevelSearch::get_graph() {
+        return graph_;
+    }
+
 } // namespace mess2_algorithm_plugins
 
