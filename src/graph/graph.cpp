@@ -33,7 +33,20 @@ namespace mess2_algorithms
     void Graph::print_edges() const {
         for (int64_t iter = 0; iter < static_cast<int64_t>(edges_.size()); ++iter) {
             const auto& edge = edges_[iter];
-            std::cout << iter << ": " << edge.get_index_parent() << " to " << edge.get_index_child() << std::endl;
+            const auto& vertex_parent = vertices_[edge.get_index_parent()];
+            const auto& vertex_child = vertices_[edge.get_index_child()];
+
+            std::cout << iter << ": " 
+                  << edge.get_index_parent() << " (" 
+                  << vertex_parent.get_x() << ", " 
+                  << vertex_parent.get_y() << ", " 
+                  << vertex_parent.get_theta() << ")"
+                  << " to " 
+                  << edge.get_index_child() << " (" 
+                  << vertex_child.get_x() << ", " 
+                  << vertex_child.get_y() << ", " 
+                  << vertex_child.get_theta() << ")" 
+                  << std::endl;
         }
     }
 
