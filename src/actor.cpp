@@ -109,34 +109,6 @@ namespace mess2_algorithms
                 }
             }
         }
-
-
-
-        // const auto n_vertices = static_cast<int64_t>(vertices.size());
-        // occupancies_.clear();
-        // occupancies_.resize(n_vertices);
-
-        // for (int64_t iter = 0; iter < n_vertices; ++iter) {
-        //     const auto vertex_parent = vertices[iter];
-        //     const auto x_parent = vertex_parent.get_x();
-        //     const auto y_parent = vertex_parent.get_y();
-
-        //     for (int64_t jter = iter; jter < n_vertices; ++jter) {
-        //         const auto vertex_child = vertices[jter];
-        //         const auto x_child = vertex_child.get_x();
-        //         const auto y_child = vertex_child.get_y();
-
-        //         const auto distance = std::sqrt(
-        //             std::pow(x_parent - x_child, 2) +
-        //             std::pow(y_parent - y_child, 2)
-        //         );
-
-        //         if (distance <= radius) {
-        //             std::cout << iter << ", " << jter << std::endl;
-        //             occupancies_[iter].emplace_back(jter);
-        //         }
-        //     }
-        // }
     }
 
     void Actor::fill_scores_by_edges(const std::vector<Edge>& edges, const std::vector<double>& threats)
@@ -196,16 +168,16 @@ namespace mess2_algorithms
         radius_ = radius;
     }
 
-    void Actor::fill_actor(const Graph& graph, const std::vector<double>& threat)
+    void Actor::fill_actor(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph, const std::vector<double>& threat)
     {
         const auto edges = graph.get_edges();
         const auto vertices = graph.get_vertices();
 
         std::cout << edges.size() << std::endl;
 
-        // (void) fill_occupancies_by_vertex(vertices, radius_);
-        // (void) fill_scores_by_edges(edges, threat);
-        // (void) fill_times_by_edges(edges, vertices);
+        (void) fill_occupancies_by_vertex(x_mesh, y_mesh, vertices);
+        (void) fill_scores_by_edges(edges, threat);
+        (void) fill_times_by_edges(edges, vertices);
     }
 
     std::vector<double> Actor::get_scores() {

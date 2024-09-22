@@ -5,7 +5,7 @@ namespace mess2_algorithms
 {
     LowLevelSearch::LowLevelSearch() {};
 
-    void LowLevelSearch::fill_low_level_search(const Graph& graph, const std::vector<double>& threat, Actor& actor, const int64_t& index_source, const int64_t& index_target)
+    void LowLevelSearch::fill_low_level_search(const Graph& graph, Actor& actor, const int64_t& index_source, const int64_t& index_target)
     {
         graph_ = graph;
         adjacency_wait_ = generate_adjacency(graph, "wait");
@@ -14,9 +14,9 @@ namespace mess2_algorithms
 
         actor_ = actor;
 
-        // index_source_ = index_source;
-        // index_target_ = index_target;
-        // heuristic_.fill_heuristic(actor_.get_scores(), graph_, index_target_);
+        index_source_ = index_source;
+        index_target_ = index_target;
+        heuristic_.fill_heuristic(actor_.get_scores(), graph_, index_target_);
     }
 
     void LowLevelSearch::execute_low_level_search()

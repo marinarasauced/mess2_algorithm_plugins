@@ -23,7 +23,7 @@ namespace mess2_algorithms
         void fill_occupancies_by_vertex(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices);
         void fill_scores_by_edges(const std::vector<Edge>& edges, const std::vector<double>& threat);
         void fill_times_by_edges(const std::vector<Edge>& edges, const std::vector<Vertex>& vertices);
-        void fill_actor(const Graph& graph, const std::vector<double>& threat);
+        void fill_actor(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph, const std::vector<double>& threat);
 
         std::vector<double> get_scores();
 

@@ -16,7 +16,7 @@ namespace mess2_algorithms
     public:
         LowLevelSearch();
 
-        void fill_low_level_search(const Graph& graph, const std::vector<double>& threat, Actor& actor, const int64_t& index_source, const int64_t& index_target);
+        void fill_low_level_search(const Graph& graph, Actor& actor, const int64_t& index_source, const int64_t& index_target);
         void execute_low_level_search();
 
     private:
