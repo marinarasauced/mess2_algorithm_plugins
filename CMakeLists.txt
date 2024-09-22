@@ -9,28 +9,28 @@ find_package(ament_cmake REQUIRED)
 
 include_directories(include)
 
-add_library(edge SHARED src/graph/edge.cpp)
-add_library(vertex SHARED src/graph/vertex.cpp)
-add_library(_graph SHARED src/graph/_graph.cpp)
+add_library(_mess2_algorithm_edge SHARED src/graph/edge.cpp)
+add_library(_mess2_algorithm_vertex SHARED src/graph/vertex.cpp)
+add_library(_mess2_algorithm_graph SHARED src/graph/graph.cpp)
 
-add_library(adjacency SHARED src/low_level/adjacency.cpp)
-add_library(heuristic SHARED src/low_level/heuristic.cpp)
-add_library(llhistory SHARED src/low_level/history.cpp)
-add_library(llqueue SHARED src/low_level/queue.cpp)
-add_library(_low_level SHARED src/low_level/_low_level.cpp)
+add_library(_mess2_algorithm_adjacency SHARED src/low_level/adjacency.cpp)
+add_library(_mess2_algorithm_heuristic SHARED src/low_level/heuristic.cpp)
+add_library(_mess2_algorithm_history SHARED src/low_level/history.cpp)
+add_library(_mess2_algorithm_queue SHARED src/low_level/queue.cpp)
+add_library(_mess2_algorithm_low_level SHARED src/low_level/low_level.cpp)
 
-add_library(actor SHARED src/actor.cpp)
-add_library(utils SHARED src/utils.cpp)
+add_library(_mess2_algorithm_actor SHARED src/actor.cpp)
+add_library(_mess2_algorithm_utils SHARED src/utils.cpp)
 
-target_link_libraries(vertex edge)
-target_link_libraries(_graph vertex edge)
-target_link_libraries(adjacency _graph vertex edge)
-target_link_libraries(heuristic _graph vertex edge)
-target_link_libraries(_low_level _graph vertex edge adjacency heuristic llhistory llqueue)
-target_link_libraries(actor _graph vertex edge)
+target_link_libraries(_mess2_algorithm_vertex _mess2_algorithm_edge)
+target_link_libraries(_mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
+target_link_libraries(_mess2_algorithm_adjacency _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
+target_link_libraries(_mess2_algorithm_heuristic _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
+target_link_libraries(_mess2_algorithm_low_level _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge _mess2_algorithm_adjacency _mess2_algorithm_heuristic _mess2_algorithm_history _mess2_algorithm_queue)
+target_link_libraries(_mess2_algorithm_actor _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
 
 install(
-  TARGETS edge vertex _graph adjacency heuristic llhistory llqueue _low_level actor utils
+  TARGETS _mess2_algorithm_edge _mess2_algorithm_vertex _mess2_algorithm_graph _mess2_algorithm_adjacency _mess2_algorithm_heuristic _mess2_algorithm_history _mess2_algorithm_queue _mess2_algorithm_low_level _mess2_algorithm_actor _mess2_algorithm_utils
   EXPORT export_mess2_algorithm_plugins
   LIBRARY DESTINATION lib
 )
