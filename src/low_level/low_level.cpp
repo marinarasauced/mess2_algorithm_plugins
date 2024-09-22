@@ -19,7 +19,7 @@ namespace mess2_algorithms
         heuristic_.fill_heuristic(actor_.get_scores(), graph_, index_target_);
     }
 
-    void LowLevelSearch::execute_low_level_search()
+    pathplan LowLevelSearch::execute_low_level_search()
     {
         (void) history_.clear_history();
         (void) queue_.clear_queue();
@@ -70,6 +70,10 @@ namespace mess2_algorithms
                 break;
             }
         }
+
+        auto path = retrieve_path(history_);
+
+        return path;
     }
 
 } // namespace mess2_algorithm_plugins
