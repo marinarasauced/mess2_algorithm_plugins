@@ -27,11 +27,15 @@ namespace mess2_algorithms
         (void) history_.append_history(0.0, 0.0, index_source_, -1, "wait");
         (void) queue_.append_queue(0.0, 0.0, index_source_, 0);
 
+        std::cout << "target : " << index_target_ << std::endl;
+
         bool is_complete = false;
         while (!queue_.is_empty())
         {
             const auto curr = queue_.lookup_queue();
             const auto last = history_.lookup_history(curr.index_history);
+
+            std::cout << last.score << ", " << last.time << ", " << last.index_parent << ", " << last.type << std::endl;
 
             std::vector<int64_t> adjacencies;
             if (last.type=="wait") {
@@ -41,6 +45,12 @@ namespace mess2_algorithms
             } else if (last.type=="translate") {
                 adjacencies = adjacency_translate_.get_adjacencies(curr.index_parent);
             }
+
+            std::cout << "adjacencies : ";
+            for (const auto adjacency : adjacencies) {
+                std::cout << adjacency;
+            }
+            std::cout << std::endl;
 
             auto index_history = history_.size_history();
             for (int64_t iter = 0; iter < static_cast<int64_t>(adjacencies.size()); ++iter)
@@ -69,6 +79,8 @@ namespace mess2_algorithms
             if (is_complete) {
                 break;
             }
+
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
         auto path = retrieve_path(history_);
