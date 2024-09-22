@@ -5,7 +5,7 @@
 
 namespace mess2_algorithms
 {
-    std::tuple<arma::mat, arma::mat> get_mesh(const double& x_min, const double& x_max, const double& y_min, const double& y_max, const int64_t& resolution);
+    std::tuple<arma::mat, arma::mat> generate_mesh(const double& x_min, const double& x_max, const double& y_min, const double& y_max, const int64_t& resolution);
 
 } // namespace mess2_algorithms
 
