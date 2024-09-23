@@ -15,7 +15,7 @@ namespace mess2_algorithms
     struct low_level_queue_operator {
         bool operator()(const low_level_queue& a, const low_level_queue& b) {
             if (a.score != b.score) {
-                return a.score < b.score;
+                return a.score > b.score;
             }
             return a.time > b.time;
         }

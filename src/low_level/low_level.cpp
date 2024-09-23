@@ -8,9 +8,15 @@ namespace mess2_algorithms
     void LowLevelSearch::fill_low_level_search(const Graph& graph, Actor& actor, const int64_t& index_source, const int64_t& index_target)
     {
         graph_ = graph;
+
         adjacency_wait_ = generate_adjacency(graph, "wait");
+        // (void) adjacency_wait_.print_adjacency(graph);
+
         adjacency_rotate_ = generate_adjacency(graph, "rotate");
+        // (void) adjacency_rotate_.print_adjacency(graph);
+
         adjacency_translate_ = generate_adjacency(graph, "translate");
+        // (void) adjacency_translate_.print_adjacency(graph);
 
         actor_ = actor;
 
@@ -27,15 +33,11 @@ namespace mess2_algorithms
         (void) history_.append_history(0.0, 0.0, index_source_, -1, "wait");
         (void) queue_.append_queue(0.0, 0.0, index_source_, 0);
 
-        std::cout << "target : " << index_target_ << std::endl;
-
         bool is_complete = false;
         while (!queue_.is_empty())
         {
             const auto curr = queue_.lookup_queue();
             const auto last = history_.lookup_history(curr.index_history);
-
-            std::cout << last.score << ", " << last.time << ", " << last.index_parent << ", " << last.type << std::endl;
 
             std::vector<int64_t> adjacencies;
             if (last.type=="wait") {
@@ -46,16 +48,11 @@ namespace mess2_algorithms
                 adjacencies = adjacency_translate_.get_adjacencies(curr.index_parent);
             }
 
-            std::cout << "adjacencies : ";
-            for (const auto adjacency : adjacencies) {
-                std::cout << adjacency;
-            }
-            std::cout << std::endl;
-
             auto index_history = history_.size_history();
             for (int64_t iter = 0; iter < static_cast<int64_t>(adjacencies.size()); ++iter)
             {
                 const auto index_edge = adjacencies[iter];
+
                 const auto edge = graph_.get_edge(index_edge);
                 auto [ds, dt] = actor_.get_cost_to_transition(index_edge);
 
@@ -79,8 +76,6 @@ namespace mess2_algorithms
             if (is_complete) {
                 break;
             }
-
-            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
         auto path = retrieve_path(history_);
