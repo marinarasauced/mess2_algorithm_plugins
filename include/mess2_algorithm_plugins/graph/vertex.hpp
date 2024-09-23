@@ -31,6 +31,8 @@ namespace mess2_algorithms
 
     std::vector<Vertex> generate_vertices(const arma::mat& x_mesh, const arma::mat& y_mesh);
 
+    std::vector<int64_t> generate_vertices_key(const int64_t& n_vertices);
+
 } // namespace mess2_algorithms
 
 #endif // MESS2_ALGORITHM_PLUGINS_VERTEX_HPP

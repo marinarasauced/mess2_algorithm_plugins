@@ -32,6 +32,8 @@ namespace mess2_algorithms
 
     Graph generate_graph(const arma::mat& x_mesh, const arma::mat& y_mesh);
 
+    int64_t lookup_index_edge(const Graph& graph, const int64_t& index_parent, const int64_t& index_child);
+
 } // namespace mess2_algorithms
 
 #endif // MESS2_ALGORITHM_PLUGINS_GRAPH_HPP

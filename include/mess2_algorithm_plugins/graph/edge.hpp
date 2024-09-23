@@ -23,6 +23,9 @@ namespace mess2_algorithms
 
     std::vector<Edge> generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const std::vector<Vertex>& vertices, std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_vertices> vertices_map);
 
+    std::vector<int64_t> generate_edges_key(const int64_t& n_edges);
+    std::vector<int64_t> reset_edges_key(std::vector<int64_t>& key_edges);
+
 } // namespace mess2_algorithms
 
 #endif // MESS2_ALGORITHM_PLUGINS_EDGE_HPP

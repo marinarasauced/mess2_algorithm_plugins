@@ -31,4 +31,8 @@ namespace mess2_algorithms
         queue_.pop();
     }
 
+    int64_t LowLevelQueue::size_queue() {
+        return static_cast<int64_t>(queue_.size());
+    }
+
 } // namespace mess2_algorithms

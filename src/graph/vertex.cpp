@@ -46,4 +46,16 @@ namespace mess2_algorithms
         return vertices;
     }
 
+    std::vector<int64_t> generate_vertices_key(const int64_t& n_vertices)
+    {
+        std::vector<int64_t> keys;
+        keys.resize(n_vertices);
+
+        for (int64_t iter = 0; iter < n_vertices; ++iter) {
+            keys[iter] = 0;
+        }
+
+        return keys;
+    }
+
 } // namespace mess2_algorithms

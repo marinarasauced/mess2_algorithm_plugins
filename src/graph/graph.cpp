@@ -73,4 +73,19 @@ namespace mess2_algorithms
         return _graph;
     }
 
+    int64_t lookup_index_edge(const Graph& graph, const int64_t& index_parent, const int64_t& index_child)
+    {
+        const auto edges = graph.get_edges();
+        const auto n_edges = static_cast<int64_t>(edges.size());
+        for (int64_t iter = 0; iter < n_edges; ++iter) {
+            const auto edge = edges[iter];
+            const auto index_1 = edge.get_index_parent();
+            const auto index_2 = edge.get_index_child();
+            if (index_1 == index_parent && index_2 == index_child) {
+                return iter;
+            }
+        }
+        return -1;
+    }
+
 } // namespace mess2_algorithms

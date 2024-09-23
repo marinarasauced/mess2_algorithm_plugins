@@ -8,6 +8,7 @@
 #include "mess2_algorithm_plugins/low_level/history.hpp"
 #include "mess2_algorithm_plugins/low_level/queue.hpp"
 #include "mess2_algorithm_plugins/actor.hpp"
+#include "mess2_algorithm_plugins/constraint.hpp"
 #include "mess2_algorithm_plugins/path.hpp"
 
 namespace mess2_algorithms
@@ -18,7 +19,7 @@ namespace mess2_algorithms
         LowLevelSearch();
 
         void fill_low_level_search(const Graph& graph, Actor& actor, const int64_t& index_source, const int64_t& index_target);
-        pathplan execute_low_level_search();
+        pathplan execute_low_level_search(const Constraints& constraints);
 
         Graph get_graph();
 
@@ -34,6 +35,7 @@ namespace mess2_algorithms
         int64_t index_source_;
         int64_t index_target_;
         Heuristic heuristic_;
+        std::vector<int64_t> key_edges_;
     };
 
 } // namespace mess2_algorithms

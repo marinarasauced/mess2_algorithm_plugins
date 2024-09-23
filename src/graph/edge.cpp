@@ -90,7 +90,7 @@ namespace mess2_algorithms
                         bool is_same_theta = (theta_1 == theta_2);
 
                         if (is_same_x && is_same_y && is_same_theta) {
-                            // edges.emplace_back(Edge(index_1, index_2, "wait"));
+                            edges.emplace_back(Edge(index_1, index_2, "wait"));
                         } else if (is_same_x && is_same_y && !is_same_theta) {
                             edges.emplace_back(Edge(index_1, index_2, "rotate"));
                         } else if (is_same_theta) {
@@ -171,5 +171,19 @@ namespace mess2_algorithms
 
         return edges;
     }
+
+    std::vector<int64_t> generate_edges_key(const int64_t& n_edges) {
+        std::vector<int64_t> key_edges;
+        key_edges.resize(n_edges);
+        return key_edges;
+    }
+
+    std::vector<int64_t> reset_edges_key(std::vector<int64_t>& key_edges) {
+        for (int64_t iter = 0; iter < static_cast<int64_t>(key_edges.size()); ++iter) {
+            key_edges[iter] = 0;
+        }
+        return key_edges;
+    }
+
 
 } // namespace mess2_algorithms

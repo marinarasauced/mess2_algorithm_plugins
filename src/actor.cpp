@@ -20,14 +20,14 @@ namespace mess2_algorithms
     Actor::Actor() {};
 
     double Actor::get_time_to_wait() {
-        return 1.0;
+        return 0.5;
     }
 
     double Actor::get_time_to_rotate(const Vertex& vertex_parent, const Vertex& vertex_child) {
         const auto theta_parent = vertex_parent.get_theta() * (M_PI / 180);
         const auto theta_child = vertex_child.get_theta() * (M_PI / 180);
-        auto dtheta = theta_child - theta_parent;
 
+        auto dtheta = theta_child - theta_parent;
         if (dtheta > M_PI) {
             dtheta -= 2 * M_PI;
         } else if (dtheta < -M_PI) {
@@ -69,7 +69,6 @@ namespace mess2_algorithms
     {
         const auto score = scores_[index_edge];
         const auto time = times_[index_edge];
-
         return std::tuple<double, double>{score * time, time};
     }
 
