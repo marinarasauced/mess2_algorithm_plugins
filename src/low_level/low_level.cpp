@@ -27,7 +27,7 @@ namespace mess2_algorithms
         key_edges_ = generate_edges_key(graph_.get_edges().size());
     }
 
-    pathplan LowLevelSearch::execute_low_level_search(const Constraints& constraints)
+    pathplan LowLevelSearch::execute_low_level_search(const Constraints& constraints, const double& timeout)
     {
         (void) history_.clear_history();
         (void) queue_.clear_queue();
@@ -35,10 +35,17 @@ namespace mess2_algorithms
         (void) history_.append_history(0.0, 0.0, index_source_, -1, "wait");
         (void) queue_.append_queue(0.0, 0.0, index_source_, 0);
 
+        const auto t_init = std::chrono::steady_clock::now();
+
         bool is_complete = false;
         int64_t counter_update = 0;
         while (!queue_.is_empty())
         {
+            auto dt_curr = std::chrono::duration<double>(std::chrono::steady_clock::now() - t_init).count();
+            if (dt_curr > timeout) {
+                break;
+            }
+
             const auto curr = queue_.lookup_queue();
             const auto last = history_.lookup_history(curr.index_history);
 
@@ -124,9 +131,6 @@ namespace mess2_algorithms
 
                         history_.append_history(score_next, time_next, history.index_parent, index_history, "wait");
                         queue_.append_queue(score_next, time_next, history.index_parent, history_.size_history() - 1);
-
-                        
-
                         // for the time being only allow waiting if no edges have traversable edges
                     }
                 }

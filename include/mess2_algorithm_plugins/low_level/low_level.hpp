@@ -19,7 +19,7 @@ namespace mess2_algorithms
         LowLevelSearch();
 
         void fill_low_level_search(const Graph& graph, Actor& actor, const int64_t& index_source, const int64_t& index_target);
-        pathplan execute_low_level_search(const Constraints& constraints);
+        pathplan execute_low_level_search(const Constraints& constraints, const double& timeout = 10);
 
         Graph get_graph();
 
