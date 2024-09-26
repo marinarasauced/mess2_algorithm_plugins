@@ -9,32 +9,47 @@ find_package(ament_cmake REQUIRED)
 
 include_directories(include)
 
-add_library(_mess2_algorithm_edge SHARED src/graph/edge.cpp)
-add_library(_mess2_algorithm_vertex SHARED src/graph/vertex.cpp)
-add_library(_mess2_algorithm_graph SHARED src/graph/graph.cpp)
+add_library(_mess2_algorithm_plugins_actor src/actor.cpp)
+add_library(_mess2_algorithm_plugins_constraint src/constraint.cpp)
+add_library(_mess2_algorithm_plugins_graph src/graph.cpp)
+add_library(_mess2_algorithm_plugins_hl_queue src/high_level_queue.cpp)
+add_library(_mess2_algorithm_plugins_hl_search src/high_level_search.cpp)
+add_library(_mess2_algorithm_plugins_ll_history src/low_level_history.cpp)
+add_library(_mess2_algorithm_plugins_ll_queue src/low_level_queue.cpp)
+add_library(_mess2_algorithm_plugins_ll_search src/low_level_search.cpp)
 
-add_library(_mess2_algorithm_adjacency SHARED src/low_level/adjacency.cpp)
-add_library(_mess2_algorithm_heuristic SHARED src/low_level/heuristic.cpp)
-add_library(_mess2_algorithm_history SHARED src/low_level/history.cpp)
-add_library(_mess2_algorithm_queue SHARED src/low_level/queue.cpp)
-add_library(_mess2_algorithm_low_level SHARED src/low_level/low_level.cpp)
+target_link_libraries(
+  _mess2_algorithm_plugins_actor
+  _mess2_algorithm_plugins_graph
+)
 
-add_library(_mess2_algorithm_actor SHARED src/actor.cpp)
-add_library(_mess2_algorithm_constraint SHARED src/constraint.cpp)
-add_library(_mess2_algorithm_path SHARED src/path.cpp)
-add_library(_mess2_algorithm_utils SHARED src/utils.cpp)
+target_link_libraries(
+  _mess2_algorithm_plugins_ll_search
+  _mess2_algorithm_plugins_actor
+  _mess2_algorithm_plugins_constraint
+  _mess2_algorithm_plugins_graph
+  _mess2_algorithm_plugins_ll_history
+  _mess2_algorithm_plugins_ll_queue
+)
 
-target_link_libraries(_mess2_algorithm_vertex _mess2_algorithm_edge)
-target_link_libraries(_mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
-target_link_libraries(_mess2_algorithm_adjacency _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
-target_link_libraries(_mess2_algorithm_heuristic _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
-target_link_libraries(_mess2_algorithm_low_level _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge _mess2_algorithm_adjacency _mess2_algorithm_heuristic _mess2_algorithm_history _mess2_algorithm_queue _mess2_algorithm_actor _mess2_algorithm_constraint)
-target_link_libraries(_mess2_algorithm_actor _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
-target_link_libraries(_mess2_algorithm_constraint _mess2_algorithm_graph _mess2_algorithm_vertex _mess2_algorithm_edge)
-target_link_libraries(_mess2_algorithm_path _mess2_algorithm_vertex _mess2_algorithm_history)
+target_link_libraries(
+  _mess2_algorithm_plugins_hl_queue
+  _mess2_algorithm_plugins_constraint
+)
+
+target_link_libraries(
+  _mess2_algorithm_plugins_hl_search
+  _mess2_algorithm_plugins_actor
+  _mess2_algorithm_plugins_constraint
+  _mess2_algorithm_plugins_graph
+  _mess2_algorithm_plugins_hl_queue
+  _mess2_algorithm_plugins_ll_history
+  _mess2_algorithm_plugins_ll_queue
+  _mess2_algorithm_plugins_ll_search
+)
 
 install(
-  TARGETS _mess2_algorithm_edge _mess2_algorithm_vertex _mess2_algorithm_graph _mess2_algorithm_adjacency _mess2_algorithm_heuristic _mess2_algorithm_history _mess2_algorithm_queue _mess2_algorithm_low_level _mess2_algorithm_actor _mess2_algorithm_constraint _mess2_algorithm_path _mess2_algorithm_utils
+  TARGETS _mess2_algorithm_plugins_actor _mess2_algorithm_plugins_constraint _mess2_algorithm_plugins_graph _mess2_algorithm_plugins_hl_queue _mess2_algorithm_plugins_hl_search _mess2_algorithm_plugins_ll_history _mess2_algorithm_plugins_ll_queue _mess2_algorithm_plugins_ll_search
   EXPORT export_mess2_algorithm_plugins
   LIBRARY DESTINATION lib
 )

@@ -2,46 +2,132 @@
 #define MESS2_ALGORITHM_PLUGINS_ACTOR_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
-#include "mess2_algorithm_plugins/graph/graph.hpp"
-
-struct hash_occupancies {
-    template <typename T1, typename T2>
-    std::size_t operator()(const std::pair<T1, T2>& p) const {
-        auto hash1 = std::hash<T1>{}(p.first);
-        auto hash2 = std::hash<T2>{}(p.second);
-        return hash1 ^ (hash2 << 1);
-    }
-};
+#include "mess2_algorithm_plugins/graph.hpp"
 
 namespace mess2_algorithms
 {
-    // using occupancy = std::vector<std::vector<int64_t>>;
-    using occupancy = std::unordered_map<std::pair<double, double>, std::vector<int64_t>, hash_occupancies>;
-
+    /**
+     * @class Actor
+     * @brief manages an actors attributes and specifically calculated transition scores and times.
+     * 
+     * this class provides the tools to calculate transition scores and times w.r.t to the actor's configurations.
+     */
     class Actor
     {
     public:
-        Actor();
+        /**
+         * @brief constructs a class instance of Actor.
+         */
+        Actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
 
-        double get_time_to_wait();
-        double get_time_to_rotate(const Vertex& vertex_parent, const Vertex& vertex_child);
-        double get_time_to_translate(const Vertex& vertex_parent, const Vertex& vertex_child);
-        std::tuple<double, double> get_cost_to_transition(const int64_t& index_edge);
+        /**
+         * @brief calculates the time to wait between vertices.
+         * 
+         * this method calculates the wait time at an edge and is a static value.
+         * 
+         * @return the time to wait.
+         */
+        double calculate_time_to_wait();
 
-        void define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius);
+        /**
+         * @brief calculates the time to rotate between vertices.
+         * 
+         * this method assumes a linear model with a proportional state feedback controller for reducing the error between an iniial and terminal heading given that there is a maximum angular velocity.
+         * 
+         * @param vertex_parent the parent vertex.
+         * @param vertex_child the child vertex.
+         * @return the time to rotate.
+         */
+        double calculate_time_to_rotate(const graph_vertex& vertex_parent, const graph_vertex& vertex_child);
 
-        void fill_occupancies_by_x_and_y(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph);
-        void fill_scores_by_edges(const Graph& graph, const std::vector<double>& weights);
-        void fill_times_by_edges(const Graph& graph);
-        void fill_actor(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph, const std::vector<double>& threat);
+        /**
+         * @brief calculates the time to translate between vertices.
+         * 
+         * this method calculates the time to translate between vertices assuming constant linear velocity with neglible angular velocity.
+         * 
+         * @param vertex_parent the parent vertex.
+         * @param vertex_child the child vertex.
+         * @return the time to rotate.
+         */
+        double calculate_time_to_translate(const graph_vertex& vertex_parent, const graph_vertex& vertex_child);
 
-        std::vector<double> get_scores();
+        /**
+         * @brief generates a map of occupied vertex indicies by (x, y) coordinate.
+         * 
+         * this method generates an occupancy map where at a coordinate (x, y), all occupied vertices are listed.
+         * 
+         * @param graph the graph consiting of vertices, edges, etc.
+         * @param x_mesh the two dimensional arma mat consisting of x values of the graph.
+         * @param y_mesh the two dimensional arma mat consisting of y values of the graph.
+         */
+        void generate_occupancies_using_graph_map(const Graph& graph, const arma::mat& x_mesh, const arma::mat& y_mesh);
+
+        /**
+         * @brief generates transition costs by edge.
+         * 
+         * this method pregenerates the cost to transition along all valid edges where the cost is determined using the sum of threats in the occupied space.
+         * 
+         * @param graph the graph consiting of vertices, edges, etc.
+         * @param x_mesh the two dimensional arma mat consisting of x values of the graph.
+         * @param y_mesh the two dimensional arma mat consisting of y values of the graph.
+         */
+        void generate_transition_costs_by_edge(const Graph& graph, const std::vector<double>& threat);
+
+        /**
+         * @brief generates transition times by edge.
+         * 
+         * this method prefenerates the time to transition along all valid edges where the cost is determined using edge type.
+         * 
+         * @param graph the graph consiting of vertices, edges, etc.
+         * @param threat the weight of each (x, y) coordinate.
+         */
+        void generate_transition_times_by_edge(const Graph& graph);
+
+        /**
+         * 
+         */
+        void generate_transition_heuristic_by_edge(const Graph& graph);
+
+        /**
+         * 
+         */
+        std::vector<int64_t> lookup_occupancies(const double& x, const double& y) const;
+
+        /**
+         * @brief looks up the transition cost of an edge.
+         * 
+         * @param index_edge the index of the edge to lookup.
+         * @return the transition cost of the edge.
+         */
+        double lookup_cost(const double& index_edge) const;
+
+        /**
+         * @brief looks up the transition time of an edge.
+         * 
+         * @param index_edge the index of the edge to lookup.
+         * @return the transition time of the edge.
+         */
+        double lookup_time(const double& index_edge) const;
+
+        /**
+         * 
+         */
+        double lookup_heuristic(const double& index_edge) const;
+
+        /**
+         * 
+         */
+        void set_source(const int64_t& index_source);
+
+        /**
+         * 
+         */
+        void set_target(const int64_t& index_target);
+
+        int64_t index_source_;
+        int64_t index_target_;
 
     private:
-        occupancy occupancies_;
-        std::vector<double> scores_;
-        std::vector<double> times_;
-
         double k_ang_;
         double k_lin_;
         double x_tol_ang_;
@@ -49,10 +135,12 @@ namespace mess2_algorithms
         double u_max_ang_;
         double u_max_lin_;
         double radius_;
+
+        graph_map occupancies_;
+        std::vector<double> costs_;
+        std::vector<double> times_;
+        std::vector<double> heuristics_;
     };
-
-    Actor generate_actor_turtlebot3(const std::string& turtlebot3_model, const double& u_ratio, const double& r_ratio);
-
-} // namespace mess2_algorithms
+}
 
 #endif // MESS2_ALGORITHM_PLUGINS_ACTOR_HPP

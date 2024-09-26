@@ -1,194 +1,9 @@
 
 #include "mess2_algorithm_plugins/actor.hpp"
 
-template <typename T>
-T clamp(T value, T min_value, T max_value) {
-    return std::max(min_value, std::min(value, max_value));
-}
-
-struct pair_hash {
-    template <typename T1, typename T2>
-    std::size_t operator()(const std::pair<T1, T2>& p) const {
-        auto hash1 = std::hash<T1>{}(p.first);
-        auto hash2 = std::hash<T2>{}(p.second);
-        return hash1 ^ (hash2 << 1);
-    }
-};
-
 namespace mess2_algorithms
 {
-    Actor::Actor() {};
-
-    double Actor::get_time_to_wait() {
-        return 0.5;
-    }
-
-    double Actor::get_time_to_rotate(const Vertex& vertex_parent, const Vertex& vertex_child) {
-        const auto theta_parent = vertex_parent.get_theta() * (M_PI / 180);
-        const auto theta_child = vertex_child.get_theta() * (M_PI / 180);
-
-        auto dtheta = theta_child - theta_parent;
-        if (dtheta > M_PI) {
-            dtheta -= 2 * M_PI;
-        } else if (dtheta < -M_PI) {
-            dtheta += 2 * M_PI;
-        }
-
-        if (dtheta == 0.0) {
-            return 0.0;
-        }
-
-        dtheta = std::abs(dtheta);
-        auto dtheta_c = 0.0;
-        auto dtheta_p = dtheta;
-        if (dtheta * k_ang_ > u_max_ang_) {
-            dtheta_p = u_max_ang_ / k_ang_;
-            dtheta_c = dtheta - dtheta_p;
-        }
-
-        const auto time_c = dtheta_c / u_max_ang_;
-        const auto time_p = -std::log(x_tol_ang_ / dtheta_p) / k_ang_;
-        return time_c + time_p;
-    }
-
-    double Actor::get_time_to_translate(const Vertex& vertex_parent, const Vertex& vertex_child) {
-        const auto x_parent = vertex_parent.get_x();
-        const auto y_parent = vertex_parent.get_y();
-        const auto x_child = vertex_child.get_x();
-        const auto y_child = vertex_child.get_y();
-        const auto distance = std::sqrt(
-            std::pow(x_parent - x_child, 2) +
-            std::pow(y_parent - y_child, 2)
-        );
-
-        const auto time_c = distance / u_max_lin_;
-        return time_c;
-    }
-
-    std::tuple<double, double> Actor::get_cost_to_transition(const int64_t& index_edge)
-    {
-        const auto score = scores_[index_edge];
-        const auto time = times_[index_edge];
-        return std::tuple<double, double>{score * time, time};
-    }
-
-    void Actor::fill_occupancies_by_x_and_y(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph)
-    {
-        if (x_mesh.n_rows != y_mesh.n_rows || x_mesh.n_cols != y_mesh.n_cols) {
-            throw std::runtime_error("x_mesh and y_mesh must have the same dimensions");
-        } else if (radius_ <= 0.0) {
-            throw std::runtime_error("radius cannot be less than zero");
-        }
-
-        const auto vertices = graph.get_vertices();
-        const auto map_vertices = graph.get_vertices_map();
-
-        const int64_t n_rows = x_mesh.n_rows;
-        const int64_t n_cols = x_mesh.n_cols;
-        const int64_t n_elem = x_mesh.n_elem;
-        const int64_t n_vertices = vertices.size();
-
-        occupancies_.clear();
-        occupancies_.reserve(n_elem);
-
-        const auto resolution = std::min(x_mesh(0, 1) - x_mesh(0, 0), y_mesh(1, 0) - y_mesh(0, 0));
-        const auto steps = static_cast<int64_t>(std::ceil(radius_ / resolution));
-        
-        for (int64_t iter = 0; iter < n_vertices; ++iter) {
-            const auto vertex_parent = vertices[iter];
-            const auto x_parent = vertex_parent.get_x();
-            const auto y_parent = vertex_parent.get_y();
-
-            auto row_index = static_cast<int64_t>((y_parent - y_mesh(0, 0)) / resolution);
-            auto col_index = static_cast<int64_t>((x_parent - x_mesh(0, 0)) / resolution);
-
-            row_index = clamp(row_index, int64_t(0), n_rows - 1);
-            col_index = clamp(col_index, int64_t(0), n_cols - 1);
-
-            for (int64_t jter = std::max(int64_t(0), row_index - steps); jter <= std::min(n_rows - 1, row_index + steps); ++jter) {
-                for (int64_t kter = std::max(int64_t(0), col_index - steps); kter <= std::min(n_cols - 1, col_index + steps); ++kter) {
-                    const auto x_child = x_mesh(jter, kter);
-                    const auto y_child = y_mesh(jter, kter);
-
-                    const auto distance = std::sqrt(
-                        std::pow(x_parent - x_child, 2) +
-                        std::pow(y_parent - y_child, 2)
-                    );
-
-                    if (distance <= radius_) {
-                        const auto map = map_vertices.find({x_child, y_child});
-                        if (map != map_vertices.end()) {
-                            const std::vector<int64_t> indices = map->second;
-                            const auto index = indices[0];
-
-                            auto& occupancy = occupancies_[{x_parent, y_parent}];
-                            if (std::find(occupancy.begin(), occupancy.end(), index) == occupancy.end()) {
-                                occupancies_[{x_parent, y_parent}].push_back(index);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    void Actor::fill_scores_by_edges(const Graph& graph, const std::vector<double>& weights)
-    {
-        const auto edges = graph.get_edges();
-        const auto vertices = graph.get_vertices();
-
-        const auto n_edges = static_cast<int64_t>(edges.size());
-        scores_.clear();
-        scores_.resize(n_edges);
-
-        for (int64_t iter = 0; iter < n_edges; ++iter) {
-            const auto edge = edges[iter];
-            const auto index_child = edge.get_index_child();
-            const auto vertex_child = vertices[index_child];
-            
-            const auto found = occupancies_.find({vertex_child.get_x(), vertex_child.get_y()});
-
-            double threat = 0.0;
-            if (found != occupancies_.end()) {
-                for (const auto& index : found->second) {
-                    threat = threat + weights[index];
-                }
-            }
-            scores_[iter] = threat;
-        }
-    }
-
-    void Actor::fill_times_by_edges(const Graph& graph)
-    {
-        const auto edges = graph.get_edges();
-        const auto vertices = graph.get_vertices();
-
-        const auto n_edges = static_cast<int64_t>(edges.size());
-        times_.clear();
-        times_.resize(n_edges);
-
-        for (int64_t iter = 0; iter < n_edges; ++iter) {
-            const auto edge = edges[iter];
-            const auto type = edge.get_type();
-            
-            double time;
-            if (type=="wait") {
-                time = get_time_to_wait();
-            } else if (type=="rotate") {
-                const auto vertex_parent = vertices[edge.get_index_parent()];
-                const auto vertex_child = vertices[edge.get_index_child()];
-                time = get_time_to_rotate(vertex_parent, vertex_child);
-            } else if (type=="translate") {
-                const auto vertex_parent = vertices[edge.get_index_parent()];
-                const auto vertex_child = vertices[edge.get_index_child()];
-                time = get_time_to_translate(vertex_parent, vertex_child);
-            }
-
-            times_[iter] = time;
-        }
-    }
-
-    void Actor::define_actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius)
+    Actor::Actor(const double& k_ang, const double& k_lin, const double& x_tol_ang, const double& x_tol_lin, const double& u_max_ang, const double& u_max_lin, const double& radius)
     {
         k_ang_ = k_ang;
         k_lin_ = k_lin;
@@ -199,49 +14,196 @@ namespace mess2_algorithms
         radius_ = radius;
     }
 
-    void Actor::fill_actor(const arma::mat& x_mesh, const arma::mat& y_mesh, const Graph& graph, const std::vector<double>& threat)
+    double Actor::calculate_time_to_wait()
     {
-        const auto edges = graph.get_edges();
-        const auto vertices = graph.get_vertices();
-
-        (void) fill_occupancies_by_x_and_y(x_mesh, y_mesh, graph);
-        (void) fill_scores_by_edges(graph, threat);
-        (void) fill_times_by_edges(graph);
+        return 0.5;
     }
 
-    std::vector<double> Actor::get_scores() {
-        return scores_;
-    }
-    
-    Actor generate_actor_turtlebot3(const std::string& turtlebot3_model, const double& u_ratio, const double& r_ratio)
+    double Actor::calculate_time_to_rotate(const graph_vertex& vertex_parent, const graph_vertex& vertex_child)
     {
-        Actor actor;
-
-        double k_ang = 1.0;
-        double k_lin = 1.0;
-        double x_tol_ang = 0.01;
-        double x_tol_lin = 0.01;
-        double u_max_ang;
-        double u_max_lin;
-        double radius;
-
-        if (turtlebot3_model=="burger") {
-            u_max_ang = 2.84 * u_ratio;
-            u_max_lin = 0.22 * u_ratio;
-            radius = 0.105 * r_ratio;
-        } else if (turtlebot3_model=="waffle" || turtlebot3_model=="waffle_pi" || turtlebot3_model=="wafflepi") {
-            u_max_ang = 1.82 * u_ratio;
-            u_max_lin = 0.26 * u_ratio;
-            radius = 0.220 * r_ratio;
-        } else {
-            u_max_ang = 1.82 * u_ratio;
-            u_max_lin = 0.22 * u_ratio;
-            radius = 0.220 * r_ratio;
+        auto diff = std::abs((M_PI / 180) * (vertex_parent.theta - vertex_child.theta));
+        
+        if (diff > M_PI) {
+            diff -= 2 * M_PI;
+        }
+        diff = std::abs(diff);
+        
+        if (diff == 0) {
+            return 0.0;
         }
 
-        actor.define_actor(k_ang, k_lin, x_tol_ang, x_tol_lin, u_max_ang, u_max_lin, radius);
+        auto theta_p = diff;
+        auto theta_c = 0.0;
+        if (diff * k_ang_ > u_max_ang_) {
+            theta_p = u_max_ang_ / k_ang_;
+            theta_c = diff - theta_p;
+        }
 
-        return actor;
+        const auto time_p = -std::log(x_tol_ang_ / theta_p) / k_ang_;
+        const auto time_c = theta_c / u_max_ang_;
+        return time_p + time_c;
+    }
+
+    double Actor::calculate_time_to_translate(const graph_vertex& vertex_parent, const graph_vertex& vertex_child)
+    {
+        const auto diff = std::sqrt(
+            std::pow(vertex_parent.x - vertex_child.x, 2) +
+            std::pow(vertex_parent.y - vertex_child.y, 2)
+        );
+
+        const auto time_c = diff / u_max_lin_;
+        return time_c;
+    }
+
+    void Actor::generate_occupancies_using_graph_map(const Graph& graph, const arma::mat& x_mesh, const arma::mat& y_mesh)
+    {
+        if (x_mesh.n_rows != y_mesh.n_rows || x_mesh.n_cols != y_mesh.n_cols) {
+            throw std::runtime_error("x_mesh and y_mesh must have the same dimensions");
+        } else if (radius_ <= 0.0) {
+            throw std::runtime_error("radius cannot be less than zero");
+        }
+
+        const int64_t n_rows = x_mesh.n_rows;
+        const int64_t n_cols = x_mesh.n_cols;
+        const int64_t n_elem = x_mesh.n_elem;
+        occupancies_.reserve(n_elem);
+
+        const auto resolution = std::min(x_mesh(0, 1) - x_mesh(0, 0), y_mesh(1, 0) - y_mesh(0, 0));
+        const auto steps = static_cast<int64_t>(std::ceil(radius_ / resolution));
+        for (int64_t iter = 0; iter < graph.n_vertices; ++iter) {
+            const auto vertex_parent = graph.lookup_vertex(iter);
+            auto index_row = static_cast<int64_t>((vertex_parent.y - y_mesh(0, 0)) / resolution);
+            auto index_col = static_cast<int64_t>((vertex_parent.x - x_mesh(0, 0)) / resolution);
+            index_row = std::max(int64_t(0), std::min(n_rows - 1, index_row));
+            index_col = std::max(int64_t(0), std::min(n_cols - 1, index_col));
+
+            const int64_t j_min = std::max(int64_t(0), index_row - steps);
+            const int64_t j_max = std::min(n_rows - 1, index_row + steps);
+            const int64_t k_min = std::max(int64_t(0), index_col - steps);
+            const int64_t k_max = std::min(n_cols - 1, index_col + steps);
+
+            for (int64_t jter = j_min; jter <= j_max; ++jter) {
+                for (int64_t kter = k_min; kter <= k_max; ++kter) {
+                    const auto x_child = x_mesh(jter, kter);
+                    const auto y_child = y_mesh(jter, kter);
+                    const auto diff = std::sqrt(
+                        std::pow(vertex_parent.x - x_child, 2) +
+                        std::pow(vertex_parent.y - y_child, 2)
+                    );
+
+                    if (diff <= radius_) {
+                        auto indices = graph.lookup_map(x_child, y_child);
+                        for (const auto& index : indices) {
+                            auto occupancies = occupancies_[{vertex_parent.x, vertex_parent.y}];
+                            if (std::find(occupancies.begin(), occupancies.end(), index) == occupancies.end()) {
+                                occupancies_[{vertex_parent.x, vertex_parent.y}].push_back(index);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void Actor::generate_transition_costs_by_edge(const Graph& graph, const std::vector<double>& threat)
+    {
+        costs_.clear();
+        costs_.resize(graph.n_edges);
+
+        for (int64_t iter = 0; iter < graph.n_edges; ++iter) {
+            const auto edge = graph.lookup_edge(iter);
+            const auto vertex_child = graph.lookup_vertex(edge.index_child);
+
+            double cost = std::numeric_limits<double>::max();
+            const auto search = occupancies_.find({vertex_child.x, vertex_child.y});
+            if (search != occupancies_.end()) {
+                cost = 0.0;
+                for (const auto& index : search->second) {
+                    if (index < static_cast<int64_t>(threat.size())) {
+                        cost += threat[index]; // assumes that there is an equal number of vertices per (x, y) coordinate and that all (x, y) coordinates are visited once before subsequent variations of the edge are visited.
+                    }
+                }
+            }
+            costs_[iter] = cost;
+        }
+    }
+
+    void Actor::generate_transition_times_by_edge(const Graph& graph)
+    {
+        times_.clear();
+        times_.resize(graph.n_edges);
+
+        for (int64_t iter = 0; iter < graph.n_edges; ++iter) {
+            const auto edge = graph.lookup_edge(iter);
+
+            double time = std::numeric_limits<double>::max();
+            if (edge.type == "wait") {
+                time = calculate_time_to_wait();
+            } else if (edge.type == "rotate") {
+                time = calculate_time_to_rotate(graph.lookup_vertex(edge.index_parent), graph.lookup_vertex(edge.index_child));
+            } else if (edge.type == "translate") {
+                time = calculate_time_to_translate(graph.lookup_vertex(edge.index_parent), graph.lookup_vertex(edge.index_child));
+            }
+            times_[iter] = time;
+        }
+    }
+
+    void Actor::generate_transition_heuristic_by_edge(const Graph& graph)
+    {
+        heuristics_.clear();
+        heuristics_.resize(graph.n_edges);
+
+        const auto vertex_target = graph.lookup_vertex(index_target_);
+
+        std::vector<double> diffs(graph.n_edges);
+        for (int64_t iter = 0; iter < graph.n_edges; ++iter) {
+            const auto edge = graph.lookup_edge(iter);
+            const auto vertex_source = graph.lookup_vertex(edge.index_child);
+            const auto diff = std::sqrt(
+                std::pow(vertex_source.x - vertex_target.x, 2) +
+                std::pow(vertex_source.y - vertex_target.y, 2)
+            );
+            diffs[iter] = diff;
+        }
+
+        const auto scale = *std::max_element(diffs.begin(), diffs.end());
+        if (scale <= 0.0) {
+            throw std::out_of_range("scale must be greater than zero");
+        }
+
+        for (int64_t iter = 0; iter < graph.n_edges; ++iter) {
+            heuristics_[iter] = diffs[iter] * (costs_[iter] / scale);
+        }
+    }
+
+    std::vector<int64_t> Actor::lookup_occupancies(const double& x, const double& y) const
+    {
+        return occupancies_.find({x, y})->second;
+    }
+
+    double Actor::lookup_cost(const double& index_edge) const
+    {
+        return costs_[index_edge];
+    }
+
+    double Actor::lookup_time(const double& index_edge) const
+    {
+        return times_[index_edge];
+    }
+
+    double Actor::lookup_heuristic(const double& index_edge) const
+    {
+        return heuristics_[index_edge];
+    }
+
+    void Actor::set_source(const int64_t& index_source)
+    {
+        index_source_ = index_source;
+    }
+
+    void Actor::set_target(const int64_t& index_target)
+    {
+        index_target_ = index_target;
     }
 
 } // namespace mess2_algorithms
