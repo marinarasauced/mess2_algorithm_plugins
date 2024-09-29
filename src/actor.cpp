@@ -206,4 +206,57 @@ namespace mess2_algorithms
         index_target_ = index_target;
     }
 
+    void Actor::save_actor(const std::string& path_actor)
+    {
+        std::string path_new;
+        if (!path_actor.empty() && path_actor[0] == '~') {
+            const char* home = getenv("HOME");
+            if (home) {
+                path_new = std::string(home) + path_actor.substr(1);
+            } else {
+                throw std::runtime_error("could not determine the home directory");
+            }
+        }
+
+        std::ofstream file(path_new);
+        if (!file.is_open()) {
+            throw std::runtime_error("could not open file for writing");
+        }
+
+        file << "k_ang" << "," << "k_lin" << "," << "x_tol_ang" << "," << "x_tol_lin" << "," << "u_max_ang" << "," << "u_max_lin" << "," << "radius" << "," << "t_wait" << "\n";
+
+        file << k_ang_ << "," << k_lin_ << "," << x_tol_ang_ << "," << x_tol_lin_ << "," << u_max_ang_ << "," << u_max_lin_ << "," << radius_ << "," << calculate_time_to_wait() << "\n";
+
+        file.close();
+    }
+
+    Actor generate_actor_turtlebot3(const std::string& type, const double& u_ratio, const double& r_ratio)
+    {
+        const double k_ang = 3.0;
+        const double k_lin = 1.0;
+        const double x_tol_ang = 0.01;
+        const double x_tol_lin = 0.002;
+        double u_max_ang;
+        double u_max_lin;
+        double radius;
+
+        if (type == "burger") {
+            u_max_ang = u_ratio * 2.84;
+            u_max_lin = u_ratio * 0.22;
+            radius = 0.105 * r_ratio;
+        } else if (type == "waffle" || type == "wafflepi" || type == "waffle_pi") {
+            u_max_ang = u_ratio * 1.82;
+            u_max_lin = u_ratio * 0.26;
+            radius = 0.220 * r_ratio;
+        } else {
+            u_max_ang = u_ratio * 1.82;
+            u_max_lin = u_ratio * 0.22;
+            radius = 0.220 * r_ratio;
+        }
+
+        auto actor = Actor(k_ang, k_lin, x_tol_ang, x_tol_lin, u_max_ang, u_max_lin, radius);
+
+        return actor;
+    }
+
 } // namespace mess2_algorithms

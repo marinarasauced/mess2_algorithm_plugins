@@ -127,6 +127,11 @@ namespace mess2_algorithms
         int64_t index_source_;
         int64_t index_target_;
 
+        /**
+         * 
+         */
+        void save_actor(const std::string& path_actor);
+
     private:
         double k_ang_;
         double k_lin_;
@@ -141,6 +146,12 @@ namespace mess2_algorithms
         std::vector<double> times_;
         std::vector<double> heuristics_;
     };
-}
+
+    /**
+     * 
+     */
+    Actor generate_actor_turtlebot3(const std::string& type, const double& u_ratio, const double& r_ratio);
+
+} // namespace mess2_algorithms
 
 #endif // MESS2_ALGORITHM_PLUGINS_ACTOR_HPP

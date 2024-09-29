@@ -10,6 +10,7 @@ namespace mess2_algorithms
      * @brief defines a high level queue element consisting of the cummulative score of all actors from the parent and constraints for all actors.
      */
     struct high_level_queue_element {
+        int64_t n_constraints;
         double score;
         std::vector<ConstraintsVertices> constraints;
     };
@@ -21,6 +22,9 @@ namespace mess2_algorithms
      */
     struct high_level_queue_operator {
         bool operator() (const high_level_queue_element& a, const high_level_queue_element& b) {
+            if (a.n_constraints != b.n_constraints) {
+                return a.n_constraints > b.n_constraints;
+            }
             return a.score > b.score;
         }
     };
@@ -52,7 +56,7 @@ namespace mess2_algorithms
          * @param score the cummulative score of scores of actors in the parent path plans.
          * @param constraints the tree of constraints for actors for future iterations.
          */
-        void append_queue(const double& score, const std::vector<ConstraintsVertices>& constraints);
+        void append_queue(const int64_t& n_constraints, const double& score, const std::vector<ConstraintsVertices>& constraints);
 
         /**
          * @brief clears the queue.

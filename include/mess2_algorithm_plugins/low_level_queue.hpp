@@ -13,6 +13,7 @@ namespace mess2_algorithms
         double time;
         int64_t index_parent;
         int64_t index_history;
+        int64_t n_visits;
     };
 
     /**
@@ -58,7 +59,7 @@ namespace mess2_algorithms
          * @param index_parent the index of the parent vertex.
          * @param index_history the index of the parent history.
          */
-        void append_queue(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history);
+        void append_queue(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const int64_t& n_visits);
 
         /**
          * @brief clears the queue.

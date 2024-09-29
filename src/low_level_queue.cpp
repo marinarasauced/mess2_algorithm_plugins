@@ -5,9 +5,9 @@ namespace mess2_algorithms
 {
     LowLevelQueue::LowLevelQueue() {};
 
-    void LowLevelQueue::append_queue(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history)
+    void LowLevelQueue::append_queue(const double& score, const double& time, const int64_t& index_parent, const int64_t& index_history, const int64_t& n_visits)
     {
-        const low_level_queue_element element = {score, time, index_parent, index_history};
+        const low_level_queue_element element = {score, time, index_parent, index_history, n_visits};
         queue_.push(element);
     }
 

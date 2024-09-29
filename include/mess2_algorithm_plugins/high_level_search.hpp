@@ -14,9 +14,7 @@ namespace mess2_algorithms
     /**
      * @brief defines the output of a high level search.
      */
-    struct high_level_search_output {
-
-    };
+    using high_level_search_output = std::vector<low_level_search_output>;
 
     /**
      * @class HighLevelSearch
@@ -42,17 +40,17 @@ namespace mess2_algorithms
          * @param timeout the seconds until the function timeout occurs (default : 20.0).
          * @return a high level search output.
          */
-        high_level_search_output execute_high_level_search(const Graph& graph, std::vector<Actor>& actors, const double& timeout = 20.0);
+        high_level_search_output execute_high_level_search(const Graph& graph, std::vector<Actor>& actors, const int64_t& n_iters = 1000);
 
         /**
          * 
          */
-        bool execute_conflict_search(const double& score, const std::vector<std::vector<std::pair<double, int64_t>>>& paths, const Graph& graph, std::vector<Actor>& actors, std::vector<ConstraintsVertices>& constraints);
+        bool execute_conflict_search(const double& score, const high_level_search_output& paths, const Graph& graph, std::vector<Actor>& actors, std::vector<ConstraintsVertices>& cts, const int64_t& n_constraints);
 
         /**
          * 
          */
-        void execute_conflict_resolution(const double& score, const std::vector<ConstraintsVertices>& constraints);
+        void execute_conflict_resolution(const int64_t& n_constraints, const double& score, const std::vector<ConstraintsVertices>& constraints);
 
         /**
          * @brief prints informaton about the current class.
@@ -63,6 +61,12 @@ namespace mess2_algorithms
         HighLevelQueue queue_;
         LowLevelSearch search_;
     };
-}
+
+    /**
+     * 
+     */
+    void save_high_level_search_output(const std::string& path_goals, const high_level_search_output& paths, const Graph& graph, const bool& use_simplify);
+
+} // namespace mess2_algorithms
 
 #endif // MESS2_ALGORITHM_PLUGINS_HIGH_LEVEL_SEARCH_HPP

@@ -5,9 +5,9 @@ namespace mess2_algorithms
 {
     HighLevelQueue::HighLevelQueue() {};
 
-    void HighLevelQueue::append_queue(const double& score, const std::vector<ConstraintsVertices>& constraints)
+    void HighLevelQueue::append_queue(const int64_t& n_constraints, const double& score, const std::vector<ConstraintsVertices>& constraints)
     {
-        const high_level_queue_element element = {score, constraints};
+        const high_level_queue_element element = {n_constraints, score, constraints};
         queue_.push(element);
     }
 

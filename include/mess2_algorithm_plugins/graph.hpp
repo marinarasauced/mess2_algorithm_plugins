@@ -165,6 +165,16 @@ namespace mess2_algorithms
         int64_t n_vertices;
         int64_t n_edges;
 
+        /**
+         * 
+         */
+        void save_edges(const std::string& path_edges) const;
+
+        /**
+         * 
+         */
+        void save_vertices(const std::string& path_vertices) const;
+
     private:
         graph_vertices vertices_;
         graph_map map_;

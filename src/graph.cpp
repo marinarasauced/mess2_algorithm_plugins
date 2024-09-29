@@ -234,6 +234,58 @@ namespace mess2_algorithms
         throw std::runtime_error("graph info not implemented");
     }
 
+    void Graph::save_edges(const std::string& path_edges) const
+    {
+        std::string path_new;
+        if (!path_edges.empty() && path_edges[0] == '~') {
+            const char* home = getenv("HOME");
+            if (home) {
+                path_new = std::string(home) + path_edges.substr(1);
+            } else {
+                throw std::runtime_error("could not determine the home directory");
+            }
+        }
+
+        std::ofstream file(path_new);
+        if (!file.is_open()) {
+            throw std::runtime_error("could not open file for writing");
+        }
+
+        file << "index_parent" << "," << "index_child" << "," << "type" << "\n";
+        for (int64_t iter = 0; iter < n_edges; ++iter) {
+            const auto edge = lookup_edge(iter);
+            file << edge.index_parent << "," << edge.index_child << "," << edge.type << "\n";
+        }
+
+        file.close();
+    }
+
+    void Graph::save_vertices(const std::string& path_vertices) const
+    {
+        std::string path_new;
+        if (!path_vertices.empty() && path_vertices[0] == '~') {
+            const char* home = getenv("HOME");
+            if (home) {
+                path_new = std::string(home) + path_vertices.substr(1);
+            } else {
+                throw std::runtime_error("could not determine the home directory");
+            }
+        }
+
+        std::ofstream file(path_new);
+        if (!file.is_open()) {
+            throw std::runtime_error("could not open file for writing");
+        }
+
+        file << "x" << "," << "y" << "," << "theta" << "\n";
+        for (int64_t iter = 0; iter < n_vertices; ++iter) {
+            const auto vertex = lookup_vertex(iter);
+            file << vertex.x << "," << vertex.y << "," << vertex.theta * (M_PI / 180) << "\n";
+        }
+
+        file.close();
+    }
+
     std::tuple<arma::mat, arma::mat> generate_mesh(const double& x_min, const double& x_max, const double& y_min, const double& y_max, const int64_t& resolution)
     {
         auto x_vector = arma::linspace(x_min, x_max, resolution);

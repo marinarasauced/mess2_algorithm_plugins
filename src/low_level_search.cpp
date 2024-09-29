@@ -5,8 +5,9 @@ namespace mess2_algorithms
 {
     LowLevelSearch::LowLevelSearch() {};
 
-    low_level_search_output LowLevelSearch::execute_low_level_search(const Graph& graph, const Actor& actor, const ConstraintsVertices& constraints, const double& timeout)
+    low_level_search_output LowLevelSearch::execute_low_level_search(const Graph& graph, const Actor& actor, const ConstraintsVertices& ct, const int64_t& n_iters)
     {
+        map_.clear();
         map_.resize(graph.n_edges);
         std::fill(map_.begin(), map_.end(), 0);
 
@@ -14,107 +15,112 @@ namespace mess2_algorithms
         (void) queue_.clear_queue();
 
         (void) history_.append_history(0.0, 0.0, actor.index_source_, -1, "wait");
-        (void) queue_.append_queue(0.0, 0.0, actor.index_source_, 0);
+        (void) queue_.append_queue(0.0, 0.0, actor.index_source_, 0, 1);
 
-        const auto t_init = std::chrono::steady_clock::now();
-        bool is_complete = false;
-        int64_t is_updated = 0;
+        double t_expand = 0.0;
+        for (int64_t iter = 0; iter < graph.n_vertices; ++iter) {
+            const auto constraints = ct.lookup_vertex(iter);
+            for (const auto& constraint : constraints) {
+                if (constraint.t_term > t_expand) {
+                    t_expand = constraint.t_term;
+                }
+            }
+        }
+
+        int64_t index_complete = -1;
+        int64_t n_iter = 0;
         while (queue_.size_queue() > 0)
         {
-            bool is_timeout = (std::chrono::duration<double>(std::chrono::steady_clock::now() - t_init).count() > timeout);
-            if (is_timeout) {
-                throw std::runtime_error("low level search timed out");
-                break;
+            bool is_timedout = (n_iter > n_iters);
+            if (is_timedout) {
+                throw std::runtime_error("low level search timed out by exceeding max number of iterations");
             }
+            n_iter += 1;
 
             const auto curr = queue_.lookup_queue();
             const auto last = history_.lookup_history(curr.index_history);
-            const auto size_curr = queue_.size_queue();
+
+            if (curr.index_parent == actor.index_target_ && curr.time >= t_expand) {
+                index_complete = curr.index_history;
+                break;
+            }
 
             const auto adjacencies = graph.lookup_adjacencies(curr.index_parent, last.type);
-
             auto index_history = history_.size_history();
-            for (int64_t iter = 0; iter < static_cast<int64_t>(adjacencies.size()); ++iter) {
-                const auto index_edge = adjacencies[iter];
-                if (map_[index_edge] == 0) {
-                    const auto dc = actor.lookup_cost(index_edge);
-                    const auto dt = actor.lookup_time(index_edge);
-                    const auto dh = actor.lookup_heuristic(index_edge);
+            for (const auto& index_edge : adjacencies) {
+                const auto edge = graph.lookup_edge(index_edge);
+                const auto constraints = ct.lookup_vertex(edge.index_child);
 
-                    const auto edge = graph.lookup_edge(index_edge);
-                    const auto score_next = curr.score + (dc + dh) * dt;
+                const auto dt = actor.lookup_time(index_edge);
+                const auto time_next = curr.time + dt;
+
+                bool is_constrained = false;
+                for (const auto& constraint : constraints) {
+                    if (time_next >= constraint.t_init && time_next <= constraint.t_term) {
+                        is_constrained = true;
+                    }
+                }
+                bool is_visited = map_[index_edge] >= curr.n_visits;
+
+                if (is_constrained) {
+                    const auto index_vertex = edge.index_parent;
+                    const auto index_last = graph.lookup_index_edge(index_vertex, index_vertex);
+                    const auto n_visits_next = curr.n_visits + 1;
+
+                    const auto dt = actor.lookup_time(index_last);
                     const auto time_next = curr.time + dt;
+
+                    const auto dc = actor.lookup_cost(index_last);
+                    const auto dh = actor.lookup_heuristic(index_last);
+                    const auto score_next = curr.score + (dc + dh) * dt;
+                    const auto type_next = "wait";
+
+                    history_.append_history(score_next, time_next, index_vertex, curr.index_history, type_next);
+                    queue_.append_queue(score_next, time_next, index_vertex, index_history, n_visits_next);
+
+                    index_history += 1;
+                    // map_[index_edge] += 1;
+
+                } else if (!is_constrained && !is_visited) { 
+                    const auto n_visits_next = curr.n_visits;
+
+                    const auto dt = actor.lookup_time(index_edge);
+                    const auto time_next = curr.time + dt;
+
+                    const auto dc = actor.lookup_cost(index_edge);
+                    const auto dh = actor.lookup_heuristic(index_edge);
+                    const auto score_next = curr.score + (dc + dh) * dt;
                     const auto type_next = edge.type;
 
-                    bool is_constrained = false;
-                    const auto constraints_child = constraints.lookup_vertex(edge.index_child);
-                    
-                    for (const auto& constraint_child : constraints_child) {
-                        if (constraint_child.t_init <= time_next && constraint_child.t_term >= time_next) {
-                            is_constrained = true;
-                        }
-                    }
+                    history_.append_history(score_next, time_next, edge.index_child, curr.index_history, type_next);
+                    queue_.append_queue(score_next, time_next, edge.index_child, index_history, n_visits_next);
 
-                    if (!is_constrained) {
-                        history_.append_history(score_next, time_next, edge.index_child, curr.index_history, type_next);
-                        queue_.append_queue(score_next, time_next, edge.index_child, index_history);
-                        index_history += 1;
+                    index_history += 1;
+                    map_[index_edge] += 1;
 
-                        if (edge.index_child == actor.index_target_) {
-                            is_complete = true;
-                            break;
-                        }
-                    }
+                } else if (curr.index_parent == actor.index_target_ && curr.time < t_expand && edge.type == "wait") {
+                    const auto n_visits_next = curr.n_visits + 1;
 
+                    const auto dt = actor.lookup_time(index_edge);
+                    const auto time_next = curr.time + dt;
+
+                    const auto dc = actor.lookup_cost(index_edge);
+                    const auto dh = actor.lookup_heuristic(index_edge);
+                    const auto score_next = curr.score + (dc + dh) * dt;
+                    const auto type_next = edge.type;
+
+                    history_.append_history(score_next, time_next, edge.index_child, curr.index_history, type_next);
+                    queue_.append_queue(score_next, time_next, edge.index_child, index_history, n_visits_next);
+
+                    index_history += 1;
                     map_[index_edge] += 1;
                 }
-            }
-
-            const auto size_term = queue_.size_queue();
-            if (size_curr != size_term) {
-                is_updated = 0;
-            } else if (size_curr == size_term) {
-                is_updated += 1;
-            }
-
-            if (queue_.size_queue() == 0) {
-                std::fill(map_.begin(), map_.end(), 0);
-                const auto vertex_curr = graph.lookup_vertex(curr.index_parent);
-
-                for (int64_t iter = 0; iter < is_updated; ++iter) {
-                    const auto index_history = history_.size_history() - (1 + iter);
-                    const auto history = history_.lookup_history(index_history);
-                    const auto vertex_history = graph.lookup_vertex(history.index_parent);
-
-                    // assume if you are currently at a vertex, you may continue to wait at said vertex
-                    if (vertex_curr.x == vertex_history.x && vertex_curr.y == vertex_history.y && history.type == "wait") {
-                        // get edge index and append queue with wait
-                        const auto index_edge = graph.lookup_index_edge(history.index_parent, history.index_parent);
-
-                        const auto dc = actor.lookup_cost(index_edge);
-                        const auto dt = actor.lookup_time(index_edge);
-                        const auto dh = actor.lookup_heuristic(index_edge);
-
-                        const auto edge = graph.lookup_edge(index_edge);
-                        const auto score_next = curr.score + (dc + dh) * dt;
-                        const auto time_next = curr.time + dt;
-                        const auto type_next = edge.type;
-
-                        history_.append_history(score_next, time_next, edge.index_child, curr.index_history, type_next);
-                        queue_.append_queue(score_next, time_next, edge.index_child, index_history);
-                    }
-                }
-            }
-
-            if (is_complete) {
-                break;
             }
         }
 
         low_level_search_output output;
-        const auto index_history = history_.size_history() - 1;
-        output.score = history_.unpack_score(index_history);
-        output.path = history_.unpack_path(index_history);
+        output.score = history_.unpack_score(index_complete);
+        output.path = history_.unpack_path(index_complete);
         return output;
     }
 
@@ -137,6 +143,79 @@ namespace mess2_algorithms
             const auto vertex = graph.lookup_vertex(index_vertex);
             std::cout << "\t(" << vertex.x << ", " << vertex.y << ", " << vertex.theta << ")" << std::endl;
         }
+    }
+
+    void save_low_level_search_output(const std::string& path_goal, const low_level_search_output& path, const Graph& graph, const bool& use_simplify)
+    {
+        const int64_t& n_paths = static_cast<int64_t>(path.path.size());
+        std::vector<graph_vertex> vertices;
+        
+        auto vertex_last = graph.lookup_vertex(path.path[0].second);
+        vertices.push_back(vertex_last);
+
+        auto vertex_curr = graph.lookup_vertex(path.path[1].second);
+        for (int64_t iter = 1; iter < n_paths - 1; ++iter) {
+            if (!use_simplify) {
+                auto vertex_curr = graph.lookup_vertex(path.path[iter].second);
+                vertices.push_back(vertex_curr);
+            } else {
+
+                const auto index_next = path.path[iter + 1].second;
+                const auto vertex_next = graph.lookup_vertex(index_next);
+                
+                const bool is_same_x = (vertex_last.x == vertex_curr.x);
+                const bool is_same_y = (vertex_last.y == vertex_curr.y);
+                const bool is_same_theta = (vertex_last.theta == vertex_curr.theta);
+
+                const bool will_be_same_x = (vertex_curr.x == vertex_next.x);
+                const bool will_be_same_y = (vertex_curr.y == vertex_next.y);
+                const bool will_be_same_theta = (vertex_curr.theta == vertex_next.theta);
+
+                const bool is_wait = (is_same_x && is_same_y && is_same_theta);
+                const bool is_rotate = (is_same_x && is_same_y && !is_same_theta);
+                const bool is_translate = (is_same_theta && !is_wait && !is_rotate);
+
+                const bool will_be_wait = (will_be_same_x && will_be_same_y && will_be_same_theta);
+                const bool will_be_rotate = (will_be_same_x && will_be_same_y && !will_be_same_theta);
+                const bool will_be_translate = (will_be_same_theta && !will_be_wait && !will_be_rotate);
+
+                if (is_wait || is_rotate) {
+                    vertices.push_back(vertex_curr);
+                }
+
+                if (is_translate && !will_be_translate) {
+                    vertices.push_back(vertex_curr);
+                }
+
+                vertex_last = vertex_curr;
+                vertex_curr = vertex_next;
+            }
+        }
+        vertices.push_back(vertex_curr);
+
+        std::string path_new;
+        if (!path_goal.empty() && path_goal[0] == '~') {
+            const char* home = getenv("HOME");
+            if (home) {
+                path_new = std::string(home) + path_goal.substr(1);
+            } else {
+                throw std::runtime_error("could not determine the home directory");
+            }
+        }
+
+        std::ofstream file(path_new);
+        if (!file.is_open()) {
+            throw std::runtime_error("could not open file for writing");
+        }
+
+        file << "x" << ", " << "y" << ", " << "theta" << "\n";
+        const int64_t& n_vertices = static_cast<int64_t>(vertices.size());
+        for (int64_t iter = 0; iter < n_vertices; ++iter) {
+            const auto vertex = vertices[iter];
+            file << vertex.x << ", " << vertex.y << ", " << vertex.theta * (M_PI / 180) << "\n";
+        }
+
+        file.close();
     }
 
 } // namespace mess2_algorithms

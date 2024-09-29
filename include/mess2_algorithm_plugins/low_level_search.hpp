@@ -43,7 +43,7 @@ namespace mess2_algorithms
          * @param timeout the seconds until the function timeout occurs (default = 5.0).
          * @return a low level search output.
          */
-        low_level_search_output execute_low_level_search(const Graph& graph, const Actor& actor, const ConstraintsVertices& constraints, const double& timeout = 5.0);
+        low_level_search_output execute_low_level_search(const Graph& graph, const Actor& actor, const ConstraintsVertices& ct, const int64_t& n_iters = 10000000);
 
         /**
          * 
@@ -60,6 +60,11 @@ namespace mess2_algorithms
      * 
      */
     void info_low_level_search_output(const low_level_search_output& output, const Graph& graph, Actor& actor);
+
+    /**
+     * 
+     */
+    void save_low_level_search_output(const std::string& path_goal, const low_level_search_output& path, const Graph& graph, const bool& use_simplify);
 
 } // namespace mess2_algorithms
 
