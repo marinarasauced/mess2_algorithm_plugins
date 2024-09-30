@@ -20,8 +20,8 @@ namespace mess2_algorithms
         double scores;
         high_level_search_output paths;
         int64_t n_iter = 0;
-        // while (queue_.size_queue() > 0)
-        for (int64_t kter = 0; kter < 9900; ++kter)
+        while (queue_.size_queue() > 0)
+        // for (int64_t kter = 0; kter < 1000; ++kter)
         {
             bool is_timedout = (n_iter > n_iters);
             if (is_timedout) {
@@ -137,6 +137,9 @@ namespace mess2_algorithms
                 int64_t index_t_max_other = std::min(int64_t(paths[index_other].path.size()), indices_curr[index_actor] + 1);
                 int64_t index_t_max_actor = std::min(int64_t(paths[index_other].path.size()), indices_curr[index_other] + 1);
                 double t_max = std::max(paths[index_other].path[index_t_max_other].first, paths[index_actor].path[index_t_max_actor].first);
+                if (indices_curr[index_other] == static_cast<int64_t>(paths[index_other].path.size())) {
+                    t_max = std::numeric_limits<double>::max();
+                }
 
                 std::cout << "conflict detected between actors " << index_actor << " & " << index_other << " at (" << vertex_curr.x << ", " << vertex_curr.y << ") from " << t_min << " to " << t_max << std::endl;
 
@@ -149,7 +152,7 @@ namespace mess2_algorithms
                 }
 
                 // append queue with new branches
-                // (void) execute_conflict_resolution(n_constraints + 1, score, cts_actor);
+                (void) execute_conflict_resolution(n_constraints + 1, score, cts_actor);
                 (void) execute_conflict_resolution(n_constraints + 1, score, cts_other);
 
                 return true;

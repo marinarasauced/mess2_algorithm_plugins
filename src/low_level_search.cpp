@@ -7,6 +7,8 @@ namespace mess2_algorithms
 
     low_level_search_output LowLevelSearch::execute_low_level_search(const Graph& graph, const Actor& actor, const ConstraintsVertices& ct, const int64_t& n_iters)
     {
+        auto t_init = std::chrono::steady_clock::now();
+
         map_.clear();
         map_.resize(graph.n_edges);
         std::fill(map_.begin(), map_.end(), 0);
@@ -26,6 +28,7 @@ namespace mess2_algorithms
                 }
             }
         }
+        t_expand = 100.0;
 
         int64_t index_complete = -1;
         int64_t n_iter = 0;
@@ -55,14 +58,19 @@ namespace mess2_algorithms
                 const auto time_next = curr.time + dt;
 
                 bool is_constrained = false;
+                bool is_other_at_goal = false;
                 for (const auto& constraint : constraints) {
                     if (time_next >= constraint.t_init && time_next <= constraint.t_term) {
                         is_constrained = true;
+                        if (constraint.t_term == std::numeric_limits<double>::max()) {
+                            is_other_at_goal = true;
+                        }
                     }
                 }
                 bool is_visited = map_[index_edge] >= curr.n_visits;
 
                 if (is_constrained) {
+
                     const auto index_vertex = edge.index_parent;
                     const auto index_last = graph.lookup_index_edge(index_vertex, index_vertex);
                     const auto n_visits_next = curr.n_visits + 1;
@@ -79,9 +87,9 @@ namespace mess2_algorithms
                     queue_.append_queue(score_next, time_next, index_vertex, index_history, n_visits_next);
 
                     index_history += 1;
-                    // map_[index_edge] += 1;
+                    map_[index_edge] += 1;
 
-                } else if (!is_constrained && !is_visited) { 
+                }  else if (!is_constrained && !is_visited) { 
                     const auto n_visits_next = curr.n_visits;
 
                     const auto dt = actor.lookup_time(index_edge);
@@ -114,13 +122,29 @@ namespace mess2_algorithms
 
                     index_history += 1;
                     map_[index_edge] += 1;
+
+                    if (is_other_at_goal) {
+                        std::cout << curr.index_parent << ", " << actor.index_target_ << std::endl;
+                    }
+
+                } else if (is_other_at_goal) {
+                    continue;
                 }
             }
+
+            // if (queue_.size_queue() < 2) {
+            //     index_history = history_.size_history() - 1;
+            // }
         }
 
         low_level_search_output output;
         output.score = history_.unpack_score(index_complete);
         output.path = history_.unpack_path(index_complete);
+
+        auto t_term = std::chrono::steady_clock::now();
+
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(t_term - t_init).count() << std::endl;
+
         return output;
     }
 
