@@ -279,6 +279,48 @@ namespace mess2_algorithms
         }
 
 
+        /**
+         * @brief looks up the value of the x-coordinate at the ith entry.
+         * 
+         * @param _i the column index of the x-coordinate.
+         * @return the value of the x-coordinate.
+         */
+        double lookup_x(int _i) {
+            if (_i < 0 || _i >= n_i) {
+                return -1;
+            }
+            return *values_x[_i];
+        }
+
+
+        /**
+         * @brief looks up the value of the y-coordinate at the jth entry.
+         * 
+         * @param _j the row index of the y-coordinate.
+         * @return the value of the j-coordinate.
+         */
+        double lookup_y(int _j) {
+            if (_j < 0 || _j >= n_j) {
+                return -1;
+            }
+            return *values_y[_j];
+        }
+
+
+        /**
+         * @brief looks up the value of the z-coordinate at the kth entry.
+         * 
+         * @param _k the plane index of the z-coordinate.
+         * @return the value of the z-coordinate.
+         */
+        double lookup_z(int _k) {
+            if (_k < 0 || _k >= n_k) {
+                return -1;
+            }
+            return *values_z[_k];
+        }
+
+
     private:
         Mesh3D values_threat; // a Mesh3D of static threat values of the graph.
         Mesh3D values_obstacles; // a Mesh3D of static obstacles values of the graph.
