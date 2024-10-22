@@ -335,6 +335,17 @@ namespace mess2_algorithms
         /**
          * 
          */
+        double lookup_obstacle(int _i, int _j, int _k) {
+            if (_i < 0 || _i >= n_i || _j < 0 || _j >= n_j || _k < 0 || _k >= n_k) {
+                return -1;
+            }
+            return *(values_obstacles[_i][_j][_k]);
+        }
+
+
+        /**
+         * 
+         */
         std::shared_ptr<Key3D> lookup_key(int _index_key) {
             if (_index_key < 0 || _index_key >= n_keys) {
                 return nullptr;
@@ -376,6 +387,30 @@ namespace mess2_algorithms
         }
 
 
+        /**
+         * 
+         */
+        std::shared_ptr<Edge> find_edge_by_vertices(std::shared_ptr<Vertex> &_parent, std::shared_ptr<Vertex> &_child) {
+            auto edges_possible = lookup_edges(_parent->index_vertex);
+            for (const auto &edge : edges_possible) {
+                if (edge->vertex_child->index_vertex == _child->index_vertex) {
+                    return edge;
+                }
+            }
+            return nullptr;
+        }
+
+
+        /**
+         * 
+         */
+        std::shared_ptr<Edge> find_edge_by_vertex_indices(int &_index_parent, int &_index_child) {
+            auto vertex_parent = lookup_vertex(_index_parent);
+            auto vertex_child = lookup_vertex(_index_child);
+            return find_edge_by_vertices(vertex_parent, vertex_child);
+        }
+
+
     private:
         Mesh3D values_threat; // a Mesh3D of static threat values of the graph.
         Mesh3D values_obstacles; // a Mesh3D of static obstacles values of the graph.
@@ -390,6 +425,8 @@ namespace mess2_algorithms
 
         boost::unordered_map<int, std::vector<std::shared_ptr<Vertex>>> vertices_by_index_point;
         boost::unordered_map<int, std::vector<std::shared_ptr<Edge>>> edges_by_index_vertex;
+
+        friend class Instance;
 
 
         /**

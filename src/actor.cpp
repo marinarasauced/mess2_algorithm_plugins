@@ -137,7 +137,7 @@ namespace mess2_algorithms
         for (auto i = 0; i < _graph->n_i; ++i) {
             for (auto j = 0; j < _graph->n_j; ++j) {
                 for (auto k = 0; k < _graph->n_k; ++k) {
-                    auto occupancies = lookup_occupancies_symbolically(_graph, i, j, k, occupanices_symbolic);
+                    auto occupancies = lookup_occupancies_symbolically(_graph, i, j, k, occupancies_symbolic);
 
                     auto index_point = _graph->find_index_point(i, j, k);
                     occupancies_by_index_point[index_point] = occupancies;
@@ -199,6 +199,35 @@ namespace mess2_algorithms
             auto dt = time_wait + time_rotate + time_translate;
 
             t_by_index_edge[i] = dt;
+        }
+    }
+
+
+    void Actor::compute_obstacle_avoidance_table(const std::shared_ptr<Graph> &_graph)
+    {
+        for (int i = 0; i < _graph->n_i; ++i) {
+            for (int j = 0; j < _graph->n_j; ++j) {
+                for (int k = 0; k < _graph->n_k; ++k) {
+                    auto index_point = _graph->find_index_point(i, j, k);
+
+                    bool is_in_ot = false;
+                    bool bool_in_ot = false;
+                    auto iterator = ot.find(index_point);
+                    if (iterator != ot.end()) {
+                        is_in_ot = true;
+                        bool_in_ot = iterator->second;
+                    }
+
+                    auto occupancies = lookup_occupancies_symbolically(_graph, i, j, k, occupancies_symbolic);
+
+                    for (const auto &occupancy : occupancies) {
+                        auto is_obstacle = (_graph->lookup_obstacle(occupancy->i, occupancy->j, occupancy->k) >= _graph->threshold_obstacles);
+                        if (!is_in_ot || (is_in_ot && !bool_in_ot)) {
+                            ot[index_point] = is_obstacle;
+                        }
+                    }
+                }
+            }
         }
     }
 

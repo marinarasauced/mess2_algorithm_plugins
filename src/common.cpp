@@ -8,7 +8,7 @@ namespace mess2_algorithms
         if (_path1.size() != _path2.size()) {
             return false;
         }
-        for (auto iter = 0; iter < _path1.size(); ++iter) {
+        for (unsigned iter = 0; iter < _path1.size(); ++iter) {
             if (_path1[iter].index_vertex != _path2[iter].index_vertex || _path1[iter].time != _path2[iter].time) {
                 return false;
             }
