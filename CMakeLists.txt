@@ -9,7 +9,11 @@ find_package(ament_cmake REQUIRED)
 
 include_directories(include)
 
-add_library(_mess2_algorithm_plugins src/graph.cpp)
+add_library(
+  _mess2_algorithm_plugins
+  src/graph.cpp
+  src/actor.cpp
+)
 
 # add_library(_mess2_algorithm_plugins_actor src/actor.cpp)
 # add_library(_mess2_algorithm_plugins_constraint src/constraint.cpp)

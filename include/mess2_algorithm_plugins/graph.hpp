@@ -321,6 +321,61 @@ namespace mess2_algorithms
         }
 
 
+        /**
+         * 
+         */
+        double lookup_threat(int _i, int _j, int _k) {
+            if (_i < 0 || _i >= n_i || _j < 0 || _j >= n_j || _k < 0 || _k >= n_k) {
+                return -1;
+            }
+            return *(values_threat[_i][_j][_k]);
+        }
+
+
+        /**
+         * 
+         */
+        std::shared_ptr<Key3D> lookup_key(int _index_key) {
+            if (_index_key < 0 || _index_key >= n_keys) {
+                return nullptr;
+            }
+            return keys[_index_key];
+        }
+
+
+        /**
+         * 
+         */
+        std::shared_ptr<Point3D> lookup_point(int _index_point) {
+            if (_index_point < 0 || _index_point >= n_points) {
+                return nullptr;
+            }
+            return points[_index_point];
+        }
+
+
+        /**
+         * 
+         */
+        std::shared_ptr<Vertex> lookup_vertex(int _index_vertex) {
+            if (_index_vertex < 0 || _index_vertex >= n_vertices) {
+                return nullptr;
+            }
+            return vertices[_index_vertex];
+        }
+
+
+        /**
+         * 
+         */
+        std::shared_ptr<Edge> lookup_edge(int _index_edge) {
+            if (_index_edge < 0 || _index_edge >= n_edges) {
+                return nullptr;
+            }
+            return edges[_index_edge];
+        }
+
+
     private:
         Mesh3D values_threat; // a Mesh3D of static threat values of the graph.
         Mesh3D values_obstacles; // a Mesh3D of static obstacles values of the graph.

@@ -53,6 +53,153 @@ namespace mess2_algorithms
         }
         return occupancies;
     }
-    
+
+
+    double Actor::compute_time_rotate(const std::shared_ptr<Edge> &_edge)
+    {
+        if (_edge->type != edge_type::ROTATE) {
+            return 0.0;
+        }
+
+        auto dtheta = std::abs((M_PI / 180.0) * (_edge->vertex_parent->heading - _edge->vertex_child->heading));
+
+        if (dtheta > M_PI) {
+            dtheta -= 2 * M_PI;
+        }
+        dtheta = std::abs(dtheta);
+
+        if (dtheta == 0.0) {
+            return 0.0;
+        }
+
+        auto theta_p = dtheta;
+        auto theta_c = 0.0;
+        if (dtheta * k_ang > u_ang_max) {
+            theta_p = u_ang_max / k_ang;
+            theta_c = dtheta - theta_p;
+        }
+
+        const auto time_p = -std::log(x_ang_tol / theta_p) / k_ang;
+        const auto time_c = theta_c / u_ang_max;
+        return time_p + time_c;
+    }
+
+
+    double Actor::compute_time_translate(const std::shared_ptr<Edge> &_edge)
+    {
+        if (_edge->type != edge_type::TRANSLATE_IN_PLANE || _edge->type != edge_type::TRANSLATE_OUT_OF_PLANE) {
+            return 0.0;
+        }
+
+        auto dxyz = std::sqrt(
+            std::pow(*(_edge->vertex_parent->point->x) - *(_edge->vertex_child->point->x), 2) +
+            std::pow(*(_edge->vertex_parent->point->y) - *(_edge->vertex_child->point->y), 2) + 
+            std::pow(*(_edge->vertex_parent->point->z) - *(_edge->vertex_child->point->z), 2)
+        );
+
+        const auto time_c = dxyz / u_lin_max;
+        return time_c;
+    }
+
+
+    std::list<std::shared_ptr<Key3D>> Actor::lookup_occupancies_symbolically(const std::shared_ptr<Graph> &_graph, int _i, int _j, int _k, const std::list<std::shared_ptr<Key3D>> &_map)
+    {
+        std::list<std::shared_ptr<Key3D>> occupancies;
+        for (const auto & _key : _map) {
+            auto i = _key->i + _i;
+            auto j = _key->j + _j;
+            auto k = _key->k + _k;
+            if (!_graph->are_indices_valid(i, j, k)) {
+                continue;
+            }
+
+            auto index_point = _graph->find_index_point(i, j, k);
+            auto key = _graph->lookup_key(index_point);
+            occupancies.push_back(key);
+        }
+        return occupancies;
+    }
+
+
+    void Actor::compute_occupancies_weights_heuristics(const std::shared_ptr<Graph> &_graph)
+    {
+        occupancies_by_index_point.clear();
+        g_by_index_point.clear();
+        h_by_index_point.clear();
+
+        std::unordered_map<int, double> distances_by_index_point;
+        auto target_key = _graph->lookup_vertex(index_target)->point->key;
+        auto target_x = _graph->lookup_x(target_key->i);
+        auto target_y = _graph->lookup_y(target_key->j);
+        auto target_z = _graph->lookup_z(target_key->k);
+        double distance_max = 0.0;
+
+        for (auto i = 0; i < _graph->n_i; ++i) {
+            for (auto j = 0; j < _graph->n_j; ++j) {
+                for (auto k = 0; k < _graph->n_k; ++k) {
+                    auto occupancies = lookup_occupancies_symbolically(_graph, i, j, k, occupanices_symbolic);
+
+                    auto index_point = _graph->find_index_point(i, j, k);
+                    occupancies_by_index_point[index_point] = occupancies;
+
+                    double weight = 0.0;
+                    for (const auto &occupancy : occupancies) {
+                        auto value_threat = _graph->lookup_threat(occupancy->i, occupancy->j, occupancy->k);
+                        weight += value_threat;
+                    }
+                    g_by_index_point[index_point] = weight;
+
+                    auto parent_x = _graph->lookup_x(i);
+                    auto parent_y = _graph->lookup_x(j);
+                    auto parent_z = _graph->lookup_x(k);
+
+                    auto dx = std::abs(parent_x - target_x);
+                    auto dy = std::abs(parent_y - target_y);
+                    auto dz = std::abs(parent_z - target_z);
+
+                    double distance;
+                    if (!_graph->use_diagonals_in_plane) {
+                        distance = (dx + dy) + dz;
+                    } else if (_graph->use_diagonals_in_plane) {
+                        distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
+                    }
+                    distances_by_index_point[index_point] = distance;
+                    if (distance > distance_max) {
+                        distance_max = distance;
+                    }
+                }
+            }
+        }
+
+        for (auto i = 0; i < _graph->n_i; ++i) {
+            for (auto j = 0; j < _graph->n_j; ++j) {
+                for (auto k = 0; k < _graph->n_k; ++k) {
+                    auto index_point = _graph->find_index_point(i, j, k);
+                    auto distance = distances_by_index_point.find(index_point)->second / distance_max;
+                    auto weight = g_by_index_point.find(index_point)->second;
+                    auto heuristic = distance * weight;
+                    h_by_index_point[index_point] = heuristic;
+                }
+            }
+        }
+    }
+
+
+    void Actor::compute_times(const std::shared_ptr<Graph> &_graph)
+    {
+        t_by_index_edge.clear();
+
+        for (auto i = 0; i < _graph->n_edges; ++i)
+        {
+            auto edge = _graph->lookup_edge(i);
+
+            auto time_wait = compute_time_wait(edge);
+            auto time_rotate = compute_time_rotate(edge);
+            auto time_translate = compute_time_translate(edge);
+            auto dt = time_wait + time_rotate + time_translate;
+
+            t_by_index_edge[i] = dt;
+        }
+    }
 
 } // namespace mess2_algorithms
