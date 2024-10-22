@@ -214,7 +214,7 @@ namespace mess2_algorithms
 
     Linspace1D generate_linspace1d(const double &_n_min, const double &_n_max, const int &_n_n)
     {
-        assert(_n_n > 1);
+        assert(_n_n >= 1);
         if (_n_min == _n_max && _n_n > 1) {
             throw std::logic_error("generate_linspace : lower and upper bounds cannot be equal with more than one point");
         }

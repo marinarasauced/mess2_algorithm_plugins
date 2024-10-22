@@ -62,12 +62,12 @@ namespace mess2_algorithms
             (void) compute_occupancies_weights_heuristics(_graph);
             (void) compute_times(_graph);
             auto toc = std::clock();
-            runtime_build = (toc - tic) / CLOCKS_PER_SEC;
+            runtime_build = (double) (toc - tic) / CLOCKS_PER_SEC;
 
             tic = std::clock();
             (void) compute_obstacle_avoidance_table(_graph);
             toc = std::clock();
-            runtime_build_ot = (toc - tic) / CLOCKS_PER_SEC;
+            runtime_build_ot = (double) (toc - tic) / CLOCKS_PER_SEC;
         };
 
 

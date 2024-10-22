@@ -166,13 +166,13 @@ namespace mess2_algorithms
 
             n_i = static_cast<int>(n_x);
             n_j = static_cast<int>(n_y);
-            n_z = static_cast<int>(n_z);
+            n_k = static_cast<int>(n_z);
 
             (void) compute_keys_points_vertices();
             (void) compute_edges();
 
             auto toc = std::clock();
-            runtime_build = (toc - tic) / CLOCKS_PER_SEC;
+            runtime_build = (double) (toc - tic) / CLOCKS_PER_SEC;
         }
 
 
@@ -408,6 +408,20 @@ namespace mess2_algorithms
             auto vertex_parent = lookup_vertex(_index_parent);
             auto vertex_child = lookup_vertex(_index_child);
             return find_edge_by_vertices(vertex_parent, vertex_child);
+        }
+
+
+        /**
+         * 
+         */
+        int find_index_vertex_by_xyz_and_heading(double _x, double _y, double _z, double _theta)
+        {
+            for (const auto &vertex : vertices) {
+                if (*(vertex->point->x) == _x && *(vertex->point->y) == _y && *(vertex->point->z) == _z && vertex->heading == _theta) {
+                    return vertex->index_vertex;
+                }
+            }
+            return -1;
         }
 
 

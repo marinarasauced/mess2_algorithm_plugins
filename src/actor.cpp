@@ -150,19 +150,19 @@ namespace mess2_algorithms
                     g_by_index_point[index_point] = weight;
 
                     auto parent_x = _graph->lookup_x(i);
-                    auto parent_y = _graph->lookup_x(j);
-                    auto parent_z = _graph->lookup_x(k);
+                    auto parent_y = _graph->lookup_y(j);
+                    auto parent_z = _graph->lookup_z(k);
 
                     auto dx = std::abs(parent_x - target_x);
                     auto dy = std::abs(parent_y - target_y);
                     auto dz = std::abs(parent_z - target_z);
 
-                    double distance;
-                    if (!_graph->use_diagonals_in_plane) {
-                        distance = (dx + dy) + dz;
-                    } else if (_graph->use_diagonals_in_plane) {
-                        distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
-                    }
+                    double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+                    // if (!_graph->use_diagonals_in_plane) {
+                    //     distance = (dx + dy) + dz;
+                    // } else if (_graph->use_diagonals_in_plane) {
+                    //     distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
+                    // }
                     distances_by_index_point[index_point] = distance;
                     if (distance > distance_max) {
                         distance_max = distance;
@@ -170,7 +170,6 @@ namespace mess2_algorithms
                 }
             }
         }
-
         for (auto i = 0; i < _graph->n_i; ++i) {
             for (auto j = 0; j < _graph->n_j; ++j) {
                 for (auto k = 0; k < _graph->n_k; ++k) {
