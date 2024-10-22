@@ -3,304 +3,243 @@
 
 namespace mess2_algorithms
 {
-    Graph::Graph(const arma::mat& x_mesh, const arma::mat& y_mesh, const int64_t& resolution, const bool& use_diagonals)
+    void Graph::compute_keys_points_vertices()
     {
-        (void) generate_vertices(x_mesh, y_mesh, use_diagonals);
-        (void) generate_map(resolution);
-        (void) generate_edges(x_mesh, y_mesh, use_diagonals);
-        (void) generate_adjacencies();
-    };
+        keys.clear();
+        points.clear();
+        vertices.clear();
 
-    void Graph::generate_vertices(const arma::mat& x_mesh, const arma::mat& y_mesh, const bool& use_diagonals)
-    {
-        if (x_mesh.n_rows != y_mesh.n_rows || x_mesh.n_cols != y_mesh.n_cols) {
-            throw std::runtime_error("x_mesh and y_mesh must have the same dimensions");
+        int n_heading = 4;
+        double dheading = 90.0;
+        if (use_diagonals_in_plane) {
+            n_heading = 8;
+            dheading = 45.0;
         }
 
-        const int64_t n_rows = x_mesh.n_rows;
-        const int64_t n_cols = x_mesh.n_cols;
+        for (auto i = 0; i < n_i; ++i) {
+            for (auto j = 0; j < n_j; ++j) {
+                for (auto k = 0; k < n_k; ++k) {
+                    auto key = std::make_shared<Key3D>();
+                    key->index_key = static_cast<int>(keys.size());
+                    key->i = i;
+                    key->j = j;
+                    key->k = k;
+                    keys.push_back(key);
 
-        int64_t c1;
-        double c2;
-        if (use_diagonals) {
-            c1 = 8;
-            c2 = 45;
-        } else if (!use_diagonals) {
-            c1 = 4;
-            c2 = 90;
-        }
+                    auto point = std::make_shared<Point3D>();
+                    point->index_point = static_cast<int>(points.size());
+                    point->key = keys.back();
+                    point->x = values_x[i];
+                    point->y = values_y[j];
+                    point->z = values_z[k];
+                    point->value_threat = values_threat[i][j][k];
+                    point->value_obstacle = values_obstacles[i][j][k];
+                    points.push_back(point);
 
-        for (int64_t iter = 0; iter < c1; ++iter) {
-            for (int64_t jter = 0; jter < n_rows; ++jter) {
-                for (int64_t kter = 0; kter < n_cols; ++ kter) {
-                    vertices_.emplace_back(graph_vertex{x_mesh(jter, kter), y_mesh(jter, kter), c2 * iter});
-                }
-            }
-        }
+                    for (auto h = 0; h < n_heading; ++h) {
+                        auto vertex = std::make_shared<Vertex>();
+                        vertex->index_vertex = static_cast<int>(vertices.size());
+                        vertex->point = points.back();
+                        vertex->heading = h * dheading;
+                        vertices.push_back(vertex);
 
-        n_vertices = static_cast<int64_t>(vertices_.size());
-    }
-
-    void Graph::generate_map(const int64_t& resolution)
-    {
-        const int64_t n_elem = std::pow(resolution, 2);
-        map_.reserve(n_elem);
-
-        for (int64_t iter = 0; iter < n_vertices; ++iter) {
-            const auto vertex = vertices_[iter];
-            map_[{vertex.x, vertex.y}].push_back(iter);
-        }
-    }
-
-    void Graph::generate_edges(const arma::mat& x_mesh, const arma::mat& y_mesh, const bool& use_diagonals)
-    {
-        if (x_mesh.n_rows != y_mesh.n_rows || x_mesh.n_cols != y_mesh.n_cols) {
-            throw std::runtime_error("x_mesh and y_mesh must have the same dimensions");
-        } else if (map_.size() == 0) {
-            throw std::runtime_error("graph map cannot be empty");
-        }
-
-        const int64_t n_rows = x_mesh.n_rows;
-        const int64_t n_cols = x_mesh.n_cols;
-
-        std::vector<std::pair<std::pair<double, double>, std::pair<double, double>>> pairs;
-        for (int64_t iter = 0; iter < n_rows; ++iter) {
-            for (int64_t jter = 0; jter < n_cols; ++jter) {
-
-                // wait
-                std::pair<double, double> pair_nw = {x_mesh(iter, jter), y_mesh(iter, jter)};
-                pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_nw));
-
-                // translate horizontally in graph
-                if (jter + 1 < n_cols) {
-                    std::pair<double, double> pair_ne = {x_mesh(iter, jter + 1), y_mesh(iter, jter + 1)};
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_ne));
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_ne, pair_nw));
-                }
-
-                // translate vertically in graph
-                if (iter + 1 < n_rows) {
-                    std::pair<double, double> pair_sw = {x_mesh(iter + 1, jter), y_mesh(iter + 1, jter)};
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_sw));
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_sw, pair_nw));
-                }
-
-                // translate diagonally in graph
-                if (iter + 1 < n_rows && jter + 1 < n_cols && use_diagonals) {
-                    std::pair<double, double> pair_ne = {x_mesh(iter, jter + 1), y_mesh(iter, jter + 1)};
-                    std::pair<double, double> pair_sw = {x_mesh(iter + 1, jter), y_mesh(iter + 1, jter)};
-                    std::pair<double, double> pair_se = {x_mesh(iter + 1, jter + 1), y_mesh(iter + 1, jter + 1)};
-                    
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_nw, pair_se));
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_se, pair_nw));
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_ne, pair_sw));
-                    pairs.push_back(std::pair<std::pair<double, double>, std::pair<double, double>>(pair_sw, pair_ne));
-                }
-            }
-        }
-
-        for (const auto& pair : pairs) {
-            auto iterator_1 = map_.find(pair.first);
-            auto iterator_2 = map_.find(pair.second);
-
-            if (iterator_1 != map_.end() && iterator_2 != map_.end()) {
-                const std::vector<int64_t> indices_1 = iterator_1->second;
-                const std::vector<int64_t> indices_2 = iterator_2->second;
-
-                for (const auto& index_1 : indices_1) {
-                    for (const auto& index_2 : indices_2) {
-                        const auto vertex_1 = vertices_[index_1];
-                        const auto vertex_2 = vertices_[index_2];
-
-                        bool is_same_x = (vertex_1.x == vertex_2.x);
-                        bool is_same_y = (vertex_1.y == vertex_2.y);
-                        bool is_same_theta = (vertex_1.theta == vertex_2.theta);
-
-                        if (is_same_x && is_same_y && is_same_theta) {
-                            edges_.emplace_back(graph_edge{index_1, index_2, "wait"});
-                        } else if (is_same_x && is_same_y && !is_same_theta) {
-                            edges_.emplace_back(graph_edge{index_1, index_2, "rotate"});
-                        } else if (is_same_theta) {
-                            auto theta_true = (180.0 / M_PI) * std::atan2(vertex_2.y - vertex_1.y, vertex_2.x - vertex_1.x);
-                            if (theta_true < 0) {
-                                theta_true += 360;
-                            }
-                            if (theta_true == vertex_1.theta) {
-                                edges_.emplace_back(graph_edge{index_1, index_2, "translate"});
-                            }
-                        }
+                        vertices_by_index_point[point->index_point].push_back(vertices.back());
                     }
                 }
             }
         }
 
-        n_edges = static_cast<int64_t>(edges_.size());
+        n_keys = static_cast<int>(keys.size());
+        n_points = static_cast<int>(points.size());
+        n_vertices = static_cast<int>(vertices.size());
     }
 
-    void Graph::generate_adjacencies()
+
+    void Graph::compute_edges()
     {
-        if (n_vertices == 0 || n_edges == 0) {
-            throw std::runtime_error("vertices and edges cannot have zero elements");
-        }
+        std::vector<std::pair<std::shared_ptr<Point3D>, std::shared_ptr<Point3D>>> pairs;
+        for (auto i = 0; i < n_i; ++i) {
+            for (auto j = 0; j < n_j; ++j) {
+                for (auto k = 0; k < n_k; ++k) {
+                    if (!are_indices_valid(i, j, k)) {
+                        continue;
+                    }
 
-        adjacencies_wait_.resize(n_vertices);
-        adjacencies_rotate_.resize(n_vertices);
-        adjacencies_translate_.resize(n_vertices);
+                    int index_nw;
+                    int index_sw;
+                    int index_se;
+                    int index_ne;
+                    int index_up;
 
-        for (int64_t iter = 0; iter < n_edges; ++iter) {
-            const auto edge = edges_[iter];
+                    std::shared_ptr<Point3D> point_nw;
+                    std::shared_ptr<Point3D> point_sw;
+                    std::shared_ptr<Point3D> point_se;
+                    std::shared_ptr<Point3D> point_ne;
+                    std::shared_ptr<Point3D> point_up;
 
-            adjacencies_wait_[edge.index_parent].push_back(iter);
-            if (edge.type == "translate") {
-                adjacencies_rotate_[edge.index_parent].push_back(iter);
+                    index_nw = find_index_point(i, j, k);
+                    point_nw = points[index_nw];
+                    pairs.push_back({point_nw, point_nw}); // allows waiting and rotating in plane
+
+                    if (are_indices_valid(i + 1, j, k)) {
+                        index_sw = find_index_point(i + 1, j, k);
+                        point_sw = points[index_sw];
+                        pairs.push_back({point_nw, point_sw}); // allows translating non-diagonally in plane
+                        pairs.push_back({point_sw, point_nw}); // allows translating non-diagonally in plane
+                    }
+
+                    if (are_indices_valid(i, j + 1, k)) {
+                        index_ne = find_index_point(i, j + 1, k);
+                        point_ne = points[index_ne];
+                        pairs.push_back({point_nw, point_ne}); // allows translating non-diagonally in plane
+                        pairs.push_back({point_ne, point_nw}); // allows translating non-diagonally in plane
+                    }
+
+                    if (are_indices_valid(i + 1, j + 1, k) && use_diagonals_in_plane) {
+                        index_se = find_index_point(i + 1, j + 1, k);
+                        point_se = points[index_se];
+                        pairs.push_back({point_nw, point_se}); // allows translating diagonally in plane
+                        pairs.push_back({point_se, point_nw}); // allows translating diagonally in plane
+                        pairs.push_back({point_sw, point_ne}); // allows translating diagonally in plane
+                        pairs.push_back({point_ne, point_sw}); // allows translating diagonally in plane
+                    }
+
+                    if (are_indices_valid(i, j, k + 1)) {
+                        index_up = find_index_point(i, j, k + 1);
+                        point_up = points[index_up];
+                        pairs.push_back({point_nw, point_up}); // allows translating out of plane
+                        pairs.push_back({point_up, point_nw}); // allows translating out of plane
+                    }
+                }
             }
-            adjacencies_translate_[edge.index_parent].push_back(iter);
         }
+
+        for (const auto &pair : pairs) {
+            auto vertices1 = lookup_vertices(pair.first->index_point);
+            auto vertices2 = lookup_vertices(pair.second->index_point);
+
+            for (const auto &vertex1 : vertices1) {
+                for (const auto &vertex2 : vertices2) {
+                    bool is_same_x = (vertex1->point->x == vertex2->point->x);
+                    bool is_same_y = (vertex1->point->y == vertex2->point->y);
+                    bool is_same_z = (vertex1->point->z == vertex2->point->z);
+                    bool is_same_point = (vertex1->point->index_point == vertex2->point->index_point);
+                    bool is_same_heading = (vertex1->heading == vertex2->heading);
+
+                    bool is_wait = (is_same_point && is_same_heading);
+                    bool is_rotate = (is_same_point && !is_same_heading);
+                    bool is_translate_in_plane = (!is_same_point && is_same_z && is_same_heading);
+                    bool is_translate_out_of_plane = (!is_same_point && is_same_x && is_same_y && is_same_heading);
+
+                    bool is_valid = true;
+                    if (is_wait || is_rotate) {
+                        auto i = vertex2->point->key->i;
+                        auto j = vertex2->point->key->j;
+                        auto k = vertex2->point->key->k;
+                        if (vertex2->heading == 0.0) {
+                            if (!are_indices_valid(i + 1, j, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 45.0) {
+                            if (!are_indices_valid(i + 1, j + 1, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 90.0) {
+                            if (!are_indices_valid(i, j + 1, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 135.0) {
+                            if (!are_indices_valid(i - 1, j + 1, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 180.0) {
+                            if (!are_indices_valid(i - 1, j, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 225.0) {
+                            if (!are_indices_valid(i - 1, j - 1, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 270.0) {
+                            if (!are_indices_valid(i, j - 1, k)) {
+                                is_valid = false;
+                            }
+                        } else if (vertex2->heading == 315.0) {
+                            if (!are_indices_valid(i + 1, j - 1, k)) {
+                                is_valid = false;
+                            }
+                        }
+                    }
+
+                    if (!is_valid) {
+                        continue;
+                    }
+
+                    auto edge = std::make_shared<Edge>();
+                    edge->index_edge = static_cast<int>(edges.size());
+                    edge->vertex_parent = vertex1;
+                    edge->vertex_child = vertex2;
+                    if (is_wait) {
+                        edge->type = edge_type::WAIT;
+                        edges.push_back(edge);
+                        edges_by_index_vertex[edge->vertex_parent->index_vertex].push_back(edge);
+                    } else if (is_rotate) {
+                        edge->type = edge_type::ROTATE;
+                        edges.push_back(edge);
+                        edges_by_index_vertex[edge->vertex_parent->index_vertex].push_back(edge);
+                    } else if (is_translate_in_plane) {
+                        auto dy = *(vertex2->point->y) - *(vertex1->point->y);
+                        auto dx = *(vertex2->point->x) - *(vertex1->point->x);
+                        auto theta = (180 / M_PI) * std::atan2(dy, dx);
+                        if (theta < 0.0) {
+                            theta += 360.0;
+                        }
+                        if (theta == vertex1->heading) {
+                            edge->type = edge_type::TRANSLATE_IN_PLANE;
+                            edges.push_back(edge);
+                            edges_by_index_vertex[edge->vertex_parent->index_vertex].push_back(edge);
+                        }
+                    } else if (is_translate_out_of_plane) {
+                        edge->type = edge_type::TRANSLATE_OUT_OF_PLANE;
+                        edges.push_back(edge);
+                        edges_by_index_vertex[edge->vertex_parent->index_vertex].push_back(edge);
+                    }
+                }
+            }
+        }
+
+        n_edges = static_cast<int>(edges.size());
     }
 
-    graph_vertex Graph::lookup_vertex(const int64_t& index_vertex) const
-    {
-        if (index_vertex > n_vertices) {
-            throw std::out_of_range("vertex index cannot exceed number of vertices");
-        }
-        return vertices_[index_vertex];
-    }
 
-    std::vector<int64_t> Graph::lookup_map(const double&x, const double& y) const
+    Linspace1D generate_linspace1d(const double &_n_min, const double &_n_max, const int &_n_n)
     {
-        auto iterator = map_.find({x, y});
-        if (iterator == map_.end()) {
-            throw std::runtime_error("iterator cannot equal end of map");
+        assert(_n_n > 1);
+        if (_n_min == _n_max && _n_n > 1) {
+            throw std::logic_error("generate_linspace : lower and upper bounds cannot be equal with more than one point");
         }
 
-        const std::vector<int64_t> map = iterator->second;
-        return map;
-    }
-
-    graph_edge Graph::lookup_edge(const int64_t& index_edge) const
-    {
-        if (index_edge > n_edges) {
-            throw std::out_of_range("edge index cannot exceed number of edges");
-        }
-        return edges_[index_edge];
-    }
-
-    std::vector<int64_t> Graph::lookup_adjacencies(const int64_t& index_vertex, const std::string& type) const
-    {
-        if (index_vertex > n_vertices) {
-            throw std::out_of_range("vertex index cannot exceed number of vertices");
-        }
-        
-        if (type == "wait") {
-            return adjacencies_wait_[index_vertex];
-        } else if (type == "rotate") {
-            return adjacencies_rotate_[index_vertex];
-        } else if (type == "translate") {
-            return adjacencies_translate_[index_vertex];
+        Linspace1D linspace(_n_n);
+        double step;
+        if (_n_n == 1) {
+            step = 0.0;
         } else {
-            throw std::runtime_error("transition type must be wait, rotate, or translate");
+            step = (_n_max - _n_min) / (_n_n - 1);
         }
-
-        return std::vector<int64_t>();
+        for (auto i = 0; i < _n_n; ++i) {
+            linspace[i] = std::make_shared<double>(_n_min + step * i);
+        }
+        return linspace;
     }
 
-    int64_t Graph::lookup_index_edge(const int64_t& index_parent, const int64_t& index_child) const
+
+    Mesh3D generate_mesh3d_uniform(const int &_n_i, const int &_n_j, const int &_n_k, const double &_value)
     {
-        for (int64_t iter = 0; iter < n_edges; ++iter) {
-            const auto edge = lookup_edge(iter);
-            if (edge.index_parent == index_parent && edge.index_child == index_child) {
-                return iter;
-            }
-        }
+        assert(_n_i >= 1 && _n_j >= 1 && _n_k >= 1);
 
-        return INT64_MAX; // if no edge exists
-    }
-
-    int64_t Graph::lookup_index_vertex(const double& x, const double& y, const double& theta) const
-    {
-        const auto indices_vertices = lookup_map(x, y);
-        for (const auto& index_vertex : indices_vertices) {
-            const auto vertex = lookup_vertex(index_vertex);
-            if (vertex.theta == theta) {
-                return index_vertex;
-            }
-        }
-
-        return INT64_MAX; // if no vertex exists
-    }
-
-    void Graph::info()
-    {
-        throw std::runtime_error("graph info not implemented");
-    }
-
-    void Graph::save_edges(const std::string& path_edges) const
-    {
-        std::string path_new;
-        if (!path_edges.empty() && path_edges[0] == '~') {
-            const char* home = getenv("HOME");
-            if (home) {
-                path_new = std::string(home) + path_edges.substr(1);
-            } else {
-                throw std::runtime_error("could not determine the home directory");
-            }
-        }
-
-        std::ofstream file(path_new);
-        if (!file.is_open()) {
-            throw std::runtime_error("could not open file for writing");
-        }
-
-        file << "index_parent" << "," << "index_child" << "," << "type" << "\n";
-        for (int64_t iter = 0; iter < n_edges; ++iter) {
-            const auto edge = lookup_edge(iter);
-            file << edge.index_parent << "," << edge.index_child << "," << edge.type << "\n";
-        }
-
-        file.close();
-    }
-
-    void Graph::save_vertices(const std::string& path_vertices) const
-    {
-        std::string path_new;
-        if (!path_vertices.empty() && path_vertices[0] == '~') {
-            const char* home = getenv("HOME");
-            if (home) {
-                path_new = std::string(home) + path_vertices.substr(1);
-            } else {
-                throw std::runtime_error("could not determine the home directory");
-            }
-        }
-
-        std::ofstream file(path_new);
-        if (!file.is_open()) {
-            throw std::runtime_error("could not open file for writing");
-        }
-
-        file << "x" << "," << "y" << "," << "theta" << "\n";
-        for (int64_t iter = 0; iter < n_vertices; ++iter) {
-            const auto vertex = lookup_vertex(iter);
-            file << vertex.x << "," << vertex.y << "," << vertex.theta * (M_PI / 180) << "\n";
-        }
-
-        file.close();
-    }
-
-    std::tuple<arma::mat, arma::mat> generate_mesh(const double& x_min, const double& x_max, const double& y_min, const double& y_max, const int64_t& resolution)
-    {
-        auto x_vector = arma::linspace(x_min, x_max, resolution);
-        auto y_vector = arma::linspace(y_min, y_max, resolution);
-
-        int n_rows = y_vector.n_elem;
-        int n_cols = x_vector.n_elem;
-        arma::mat x_mesh(n_rows, n_cols);
-        arma::mat y_mesh(n_rows, n_cols);
-        for (int iter = 0; iter < n_rows; ++iter)
-        {
-            x_mesh.row(iter) = x_vector.t();
-            y_mesh.row(iter).fill(y_vector(iter));
-        }
-        return std::make_tuple(x_mesh, y_mesh);
+        Mesh3D mesh;
+        mesh.resize(_n_i, std::vector<Linspace1D>(_n_j, std::vector<std::shared_ptr<double>>(_n_k, std::make_shared<double>(_value))));
+        return mesh;
     }
 
 } // namespace mess2_algorithms
