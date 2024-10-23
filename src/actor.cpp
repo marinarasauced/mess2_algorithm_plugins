@@ -157,16 +157,19 @@ namespace mess2_algorithms
                     auto dy = std::abs(parent_y - target_y);
                     auto dz = std::abs(parent_z - target_z);
 
-                    double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-                    // if (!_graph->use_diagonals_in_plane) {
-                    //     distance = (dx + dy) + dz;
-                    // } else if (_graph->use_diagonals_in_plane) {
-                    //     distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
-                    // }
+                    double distance; // = std::sqrt(dx * dx + dy * dy + dz * dz);
+                    if (!_graph->use_diagonals_in_plane) {
+                        distance = (dx + dy) + dz;
+                    } else if (_graph->use_diagonals_in_plane) {
+                        distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
+                    }
                     distances_by_index_point[index_point] = distance;
                     if (distance > distance_max) {
                         distance_max = distance;
                     }
+                    // if (index_point = vertex_target->point->index_point) {
+                    //     distance_max = distance;
+                    // }
                 }
             }
         }
@@ -177,7 +180,7 @@ namespace mess2_algorithms
                     auto distance = distances_by_index_point.find(index_point)->second / distance_max;
                     auto weight = g_by_index_point.find(index_point)->second;
                     auto heuristic = distance * weight;
-                    h_by_index_point[index_point] = heuristic;
+                    h_by_index_point[index_point] = heuristic * 4;
                 }
             }
         }

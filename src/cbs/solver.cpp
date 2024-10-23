@@ -308,6 +308,10 @@ namespace mess2_algorithms
 
         (void) generate_root();
 
+        for (const auto path : paths) {
+            std::cout << "g : " << path->back().cost << ", h : " << path->back().heuristic << std::endl;
+        }
+
 
 
 

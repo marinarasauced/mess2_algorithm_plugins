@@ -9,6 +9,48 @@ namespace mess2_algorithms
     /**
      * 
      */
+    struct LLNodeElement
+    {
+        double g_curr;
+        double h_curr;
+        double n_conflicts;
+        int index_node;
+
+        LLNodeElement(double _g_curr, double _h_curr, double _n_conflicts, int _index_node) : g_curr(_g_curr), h_curr(_h_curr), n_conflicts(_n_conflicts), index_node(_index_node) {};
+
+        struct compare_node_primary
+        {
+            bool operator() (const LLNodeElement &_node1, const LLNodeElement &_node2) const
+            {
+                if (_node1.g_curr + _node1.h_curr == _node2.g_curr + _node2.h_curr) {
+                    if (_node1.h_curr == _node2.h_curr) {
+                        return std::rand() % 2;
+                    }
+                    return _node1.h_curr >= _node2.h_curr;
+                }
+                return _node1.g_curr + _node1.h_curr >= _node2.g_curr + _node2.h_curr;
+            }
+        };
+
+        struct compare_node_secondary
+        {
+            bool operator() (const LLNodeElement &_node1, const LLNodeElement &_node2) const
+            {
+                if (_node1.n_conflicts == _node2.n_conflicts) {
+                    if (_node1.g_curr == _node2.g_curr) {
+                        return std::rand() % 2 == 0;
+                    }
+                    return _node1.g_curr <= _node2.g_curr; // break ties towards larger g's
+                }
+                return _node1.n_conflicts >= _node2.n_conflicts;
+            }
+        };
+    };
+
+
+    /**
+     * 
+     */
     class LLNode
     {
     public:

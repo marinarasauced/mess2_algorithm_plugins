@@ -56,7 +56,7 @@ namespace mess2_algorithms
         double time_hold = _constraint_table.lookup_time_hold(vertex_target->point->index_point);
         lowerbound = std::max(time_hold - start->t_curr, std::max(score_min, _lowerbound));
 
-        auto visits = std::vector<int>(instance->graph->n_vertices, 0);
+        // auto visits = std::vector<int>(instance->graph->n_vertices, 0);
 
         while (!list_open.empty())
         // for (int iii = 0; iii < 1000; ++iii)
@@ -65,7 +65,15 @@ namespace mess2_algorithms
             // auto tic = std::clock();
             update_list_focal();
             auto curr = pop_node();
-            visits[curr->edge_prev->vertex_child->index_vertex] += 1;
+            
+            
+            // // PLEASE CHANGE THIS JUST TESTING IF N VISITS SLOWS ALG DOWN A LOT
+            // if (visits[curr->edge_prev->vertex_child->index_vertex] > 1) {
+            //     // std::cout << visits[curr->edge_prev->index_edge] << std::endl;
+            //     continue;
+            // } else {
+            //     visits[curr->edge_prev->vertex_child->index_vertex] += 1;
+            // }
 
             if (curr->edge_prev->vertex_child->index_vertex == actor->index_target && !curr->wait_at_target && curr->t_curr >= time_hold)
             {
@@ -164,13 +172,13 @@ namespace mess2_algorithms
             // std::cout << (double) (std::clock() - tic) / CLOCKS_PER_SEC * 1000000 << std::endl;
         }
         (void) release_nodes();
-        int visits_max = 0;
-        for (const auto &visit : visits) {
-            if (visit > visits_max) {
-                visits_max = visit;
-            }
-        }
-        std::cout << visits_max << std::endl;
+        // int visits_max = 0;
+        // for (const auto &visit : visits) {
+        //     if (visit > visits_max) {
+        //         visits_max = visit;
+        //     }
+        // }
+        // std::cout << visits_max << std::endl;
         return path;
     }
 
@@ -223,14 +231,14 @@ namespace mess2_algorithms
         std::shared_ptr<LLNode> curr = _node;
         while (curr != nullptr)
         {
-            PathElement elem = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr, curr->g_curr};
+            PathElement elem = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr, curr->g_curr, curr->h_curr};
             path.push_back(elem);
 
             curr = curr->parent;
         }
 
         if (curr != nullptr) {
-            PathElement elem_init = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr, curr->g_curr};
+            PathElement elem_init = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr, curr->g_curr, curr->h_curr};
             path.push_back(elem_init);
         }
 

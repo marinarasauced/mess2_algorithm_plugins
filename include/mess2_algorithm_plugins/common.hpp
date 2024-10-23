@@ -46,11 +46,13 @@ namespace mess2_algorithms
     {
         int index_vertex = -1;
         double time = 0.0;
+        double cost = 0.0;
+        double heuristic = 0.0;
         double score = 0.0;
         int mdd_width = 0;
 
         bool is_single() const { return mdd_width == 1; }
-        PathElement(int _index_vertex = -1, double _time = 0.0, double _score = 0.0) : index_vertex(_index_vertex), time(_time), score(_score) {};
+        PathElement(int _index_vertex = -1, double _time = 0.0, double _cost = 0.0, double _heuristic = 0.0) : index_vertex(_index_vertex), time(_time), cost(_cost), heuristic(_heuristic), score(cost + heuristic) {};
     };
 
 
