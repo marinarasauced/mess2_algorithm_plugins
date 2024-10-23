@@ -99,10 +99,35 @@ namespace mess2_algorithms
 
         std::shared_ptr<Instance> &instance;
 
+
         /**
          * 
          */
-        void generate_root();
+        bool generate_root();
+
+
+        /**
+         * 
+         */
+        void copy_conflicts(const std::list<std::shared_ptr<Conflict>> &_conflicts, std::list<std::shared_ptr<Conflict>> &_copy, const std::list<int> &_actors_excluded);
+
+
+        /**
+         * 
+         */
+        bool find_collisions(const std::pair<std::list<std::shared_ptr<Key3D>>, std::list<std::shared_ptr<Key3D>>> &_occupancies);
+
+
+        /**
+         * 
+         */
+        void find_conflicts(std::shared_ptr<CBSNode>& _node);
+
+
+        /**
+         * 
+         */
+        void find_conflicts(std::shared_ptr<CBSNode>& _node, int &_index_actor1, int &_index_actor2);
     };
 
 } // namespace mess2_algorithms

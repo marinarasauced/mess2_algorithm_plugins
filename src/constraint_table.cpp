@@ -233,7 +233,7 @@ namespace mess2_algorithms
                 if (iter != 0) {
                     elem_prev = elem_curr;
                 } else {
-                    elem_prev = {-1, 0.0};
+                    elem_prev = {-1, 0.0, 0.0};
                 }
 
                 elem_curr = path[iter];
@@ -241,7 +241,7 @@ namespace mess2_algorithms
                 if (iter < n_path) {
                     elem_next = path[iter + 1];
                 } else {
-                    elem_next = {elem_curr.index_vertex, MAX_TIMESTEP};
+                    elem_next = {elem_curr.index_vertex, MAX_TIMESTEP, elem_curr.score};
                 }
 
                 auto t1 = elem_prev.time;

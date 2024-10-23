@@ -56,7 +56,6 @@ public:
             graph->find_index_vertex_by_xyz_and_heading(0.0, 4.0, 0.0, 0.0),
             0.1, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
-        std::cout << actor1-> index_source << " to " << actor1->index_target << std::endl;
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor1->runtime_build);
         RCLCPP_INFO(this->get_logger(), "\truntime build ot : %f", actor1->runtime_build_ot);
 
@@ -68,7 +67,6 @@ public:
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 5.0, 0.0, 90.0),
             0.2, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
-        std::cout << actor2-> index_source << " to " << actor2->index_target << std::endl;
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor2->runtime_build);
         RCLCPP_INFO(this->get_logger(), "\truntime build ot : %f", actor2->runtime_build_ot);
 

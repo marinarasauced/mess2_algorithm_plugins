@@ -213,14 +213,14 @@ namespace mess2_algorithms
         std::shared_ptr<LLNode> curr = _node;
         while (curr != nullptr)
         {
-            PathElement elem = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr};
+            PathElement elem = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr, curr->g_curr};
             path.push_back(elem);
 
             curr = curr->parent;
         }
 
         if (curr != nullptr) {
-            PathElement elem_init = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr};
+            PathElement elem_init = {curr->edge_prev->vertex_child->index_vertex, curr->t_curr, curr->g_curr};
             path.push_back(elem_init);
         }
 

@@ -357,6 +357,19 @@ namespace mess2_algorithms
         /**
          * 
          */
+        std::shared_ptr<Key3D> lookup_key_by_index_vertex(int _index_vertex) {
+            if (_index_vertex < 0 || _index_vertex >= n_vertices) {
+                return nullptr;
+            }
+            auto vertex = lookup_vertex(_index_vertex);
+            auto key = vertex->point->key;
+            return key;
+        }
+
+
+        /**
+         * 
+         */
         std::shared_ptr<Point3D> lookup_point(int _index_point) {
             if (_index_point < 0 || _index_point >= n_points) {
                 return nullptr;
