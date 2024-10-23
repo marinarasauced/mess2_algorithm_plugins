@@ -154,18 +154,24 @@ namespace mess2_algorithms
          * 
          * @param _index_actor1 the index of the first actor in the conflict.
          * @param _index_actor2 the index of the second actor in the conflict.
-         * @param _index_edge the index of the edge at which the conflict takes place.
+         * @param _index_edge the index of the directed edge that either actor1 or actor2 transitions along where the conflict occurs.
          * @param _t1 the time at which the conflict begins.
          * @param _t2 the time at which the conflict ends.
+         * @param _t11 the time at which actor1 leaves parent in transition.
+         * @param _t12 the time at which actor1 reaches child in transition.
+         * @param _t21 the time at which actor2 leaves parent in transition.
+         * @param _t22 the time at which actor2 reaches child in transition.
+         * @param _tX1 the maximum transition time from vertices before and/or after eacher vertex in the edge of actor1's transition.
+         * @param _tX2 the maximum transition time from vertices before and/or after eacher vertex in the edge of actor2's transition.
          */
-        void define_as_edge(int &_index_actor1, int &_index_actor2, int &_index_edge, double &_t1, double &_t2, double &_tX)
+        void define_as_edge(int &_index_actor1, int &_index_actor2, int &_index_edge, double &_t11, double &_t12, const double &_t21, const double &_t22, double &_tX1, double &_tX2)
         {
             constraint1.clear();
             constraint2.clear();
             this->index_actor1 = _index_actor1;
             this->index_actor2 = _index_actor2;
-            this->constraint1.emplace_back(index_actor1, _index_edge, _t1, _t2, _tX, constraint_type::EDGE);
-            this->constraint2.emplace_back(index_actor2, _index_edge, _t1, _t2, _tX, constraint_type::EDGE);
+            this->constraint1.emplace_back(index_actor1, _index_edge, _t21, _t22, _tX2, constraint_type::EDGE);
+            this->constraint2.emplace_back(index_actor2, _index_edge, _t11, _t12, _tX1, constraint_type::EDGE);
             type = conflict_type::STANDARD;
         }
 

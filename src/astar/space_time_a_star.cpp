@@ -56,6 +56,8 @@ namespace mess2_algorithms
         double time_hold = _constraint_table.lookup_time_hold(vertex_target->point->index_point);
         lowerbound = std::max(time_hold - start->t_curr, std::max(score_min, _lowerbound));
 
+        auto visits = std::vector<int>(instance->graph->n_vertices, 0);
+
         while (!list_open.empty())
         // for (int iii = 0; iii < 1000; ++iii)
         {
@@ -63,6 +65,7 @@ namespace mess2_algorithms
             // auto tic = std::clock();
             update_list_focal();
             auto curr = pop_node();
+            visits[curr->edge_prev->vertex_child->index_vertex] += 1;
 
             if (curr->edge_prev->vertex_child->index_vertex == actor->index_target && !curr->wait_at_target && curr->t_curr >= time_hold)
             {
@@ -161,6 +164,13 @@ namespace mess2_algorithms
             // std::cout << (double) (std::clock() - tic) / CLOCKS_PER_SEC * 1000000 << std::endl;
         }
         (void) release_nodes();
+        int visits_max = 0;
+        for (const auto &visit : visits) {
+            if (visit > visits_max) {
+                visits_max = visit;
+            }
+        }
+        std::cout << visits_max << std::endl;
         return path;
     }
 

@@ -34,6 +34,7 @@ namespace mess2_algorithms
          */
         AStarNode(const double _g, const double _h, const double _t, const int _index_node, const std::shared_ptr<LLNode> &_parent, const std::shared_ptr<Edge> &_edge_prev, bool _is_in_openlist = false) : LLNode(_g, _h, _t, _index_node, _parent, _edge_prev, _is_in_openlist) {};
 
+
         /**
          * 
          */

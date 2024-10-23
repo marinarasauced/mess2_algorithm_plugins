@@ -115,7 +115,7 @@ namespace mess2_algorithms
         /**
          * 
          */
-        bool find_collisions(const std::pair<std::list<std::shared_ptr<Key3D>>, std::list<std::shared_ptr<Key3D>>> &_occupancies);
+        bool find_collisions(const std::shared_ptr<Key3D> &_key1, const std::shared_ptr<Key3D> &_key2, const double &_radius);
 
 
         /**

@@ -82,7 +82,7 @@ namespace mess2_algorithms
         n_hl_generated += 1;
         dummy_start->time_generated = n_hl_generated;
         table_of_all_nodes.push_back(dummy_start);
-        // find_conflicts(*dummy_start)
+        // find_conflicts(dummy_start);
         score_min = std::max(score_min, (double) dummy_start->g_cummulative);
         threshold_list_focal = score_min * focal_w;
 
@@ -111,14 +111,16 @@ namespace mess2_algorithms
     }
 
 
-    bool CBS::find_collisions(const std::pair<std::list<std::shared_ptr<Key3D>>, std::list<std::shared_ptr<Key3D>>> &_occupancies)
+    bool CBS::find_collisions(const std::shared_ptr<Key3D> &_key1, const std::shared_ptr<Key3D> &_key2, const double &_radius)
     {
-        for (const auto &key1 : _occupancies.first) {
-            for (const auto &key2 : _occupancies.second) {
-                if (key1->index_key == key2->index_key) {
-                    return true;
-                }
-            }
+        auto p1 = instance->graph->lookup_point(_key1->index_key);
+        auto p2 = instance->graph->lookup_point(_key2->index_key);
+        auto dx = std::abs(*(p1->x) - *(p2->x));
+        auto dy = std::abs(*(p1->y) - *(p2->y));
+        auto dz = std::abs(*(p1->z) - *(p2->z));
+        auto distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+        if (distance <= _radius) {
+            return true;
         }
         return false;
     }
@@ -147,13 +149,14 @@ namespace mess2_algorithms
         double t2 = 0.0;
         std::shared_ptr<Vertex> vertex1;
         std::shared_ptr<Vertex> vertex2;
+
         while (counter != sizes) {
             // select next lowest time instance
             t1 = path1[counter.first].time;
             t2 = path2[counter.second].time;
             
             // update second actor location and conflictsz
-            if (t2 < t1) {
+            if (t2 < t1 && counter.second != sizes.second) {
                 vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
                 key2 = vertex2->point->key;
                 occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
@@ -172,7 +175,7 @@ namespace mess2_algorithms
             }
 
             // determine if any collisions occur
-            bool is_conflicting = find_collisions(occupancies);
+            bool is_conflicting = find_collisions(key1, key2, actor1->radius + actor2->radius);
 
             // if collisions occur ...
             if (is_conflicting) {
@@ -198,8 +201,59 @@ namespace mess2_algorithms
                     auto t22 = path2[i22].time;
                     conflict->define_as_point(_index_actor1, _index_actor2, key1->index_key, key2->index_key, t11, t12, t21, t22, actor1->radius + actor2->radius);
                 }
+                assert(!conflict->constraint1.empty());
+                assert(!conflict->constraint2.empty());
+                _node->conflicts_unknown.push_back(conflict);
+
+            // edge conflict (likely won't occur in high density graph, but in graph where actor collisions can transition along the same edge without occupying conflicting points, edge conflicts may exist)
+            } else if (counter.first - 1 < sizes.first - 1 && counter.second - 1 < sizes.second && key1->index_key == path2[counter.second - 1].index_vertex && key2->index_key == path1[counter.first - 1].index_vertex) {
+                auto conflict = std::make_shared<Conflict>();
+                auto edge1 = instance->graph->find_edge_by_vertex_indices(key1->index_key, key2->index_key); // edge actor 1 takes
+                auto edge2 = instance->graph->find_edge_by_vertex_indices(key2->index_key, key1->index_key); // edge actor 2 takes
+
+                auto i11 = std::max(int(0), counter.first - 2);
+                auto i12 = std::min(counter.first, sizes.first);
+                auto i21 = std::max(int(0), counter.second - 2);
+                auto i22 = std::min(counter.second, sizes.second);
+
+                auto t11 = path1[i11].time;
+                auto t12 = path1[i12].time;
+                auto t21 = path2[i21].time;
+                auto t22 = path2[i22].time;
+
+                t1 = 0.0;
+                t2 = 0.0;
+                auto edges11 = instance->graph->lookup_edges(edge1->vertex_parent->index_vertex);
+                auto edges12 = instance->graph->lookup_edges(edge1->vertex_child->index_vertex);
+                auto edges21 = instance->graph->lookup_edges(edge2->vertex_parent->index_vertex);
+                auto edges22 = instance->graph->lookup_edges(edge2->vertex_child->index_vertex);
+                for (const auto &edge11 : edges11) {
+                    if (actor1->lookup_t(edge11->index_edge) > t1) {
+                        t1 = actor1->lookup_t(edge11->index_edge);
+                    }
+                }
+                for (const auto &edge12 : edges12) {
+                    if (actor1->lookup_t(edge12->index_edge) > t1) {
+                        t1 = actor1->lookup_t(edge12->index_edge);
+                    }
+                }
+                for (const auto &edge21 : edges21) {
+                    if (actor2->lookup_t(edge21->index_edge) > t1) {
+                        t2 = actor2->lookup_t(edge21->index_edge);
+                    }
+                }
+                for (const auto &edge22 : edges22) {
+                    if (actor2->lookup_t(edge22->index_edge) > t1) {
+                        t2 = actor2->lookup_t(edge22->index_edge);
+                    }
+                }
+                
+                conflict->define_as_edge(_index_actor1, _index_actor2, edge1->index_edge, t11, t12, t21, t22, t1, t2);
+                assert(!conflict->constraint1.empty());
+                assert(!conflict->constraint2.empty());
+                _node->conflicts_unknown.push_back(conflict);
             }
-        }
+        } 
     }
 
 
@@ -222,7 +276,7 @@ namespace mess2_algorithms
                     }
                     bool skip = false;
                     for (auto j = actors_new.begin(); j != i; ++j) {
-                        if (*j = index_actor2) {
+                        if (*j == index_actor2) {
                             skip = true;
                             break;
                         }
@@ -234,7 +288,7 @@ namespace mess2_algorithms
             }
         } else {
             for (auto index_actor1 = 0; index_actor1 < instance->n_actors; ++index_actor1) {
-                for (auto index_actor2 = 0; index_actor2 < instance->n_actors; ++index_actor2) {
+                for (auto index_actor2 = index_actor1 + 1; index_actor2 < instance->n_actors; ++index_actor2) {
                     find_conflicts(_node, index_actor1, index_actor2);
                 }
             }

@@ -87,7 +87,7 @@ namespace mess2_algorithms
 
     double Actor::compute_time_translate(const std::shared_ptr<Edge> &_edge)
     {
-        if (_edge->type != edge_type::TRANSLATE_IN_PLANE || _edge->type != edge_type::TRANSLATE_OUT_OF_PLANE) {
+        if (_edge->type == edge_type::ROTATE || _edge->type == edge_type::WAIT) {
             return 0.0;
         }
 

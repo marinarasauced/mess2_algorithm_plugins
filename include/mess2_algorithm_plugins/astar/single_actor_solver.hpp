@@ -130,9 +130,8 @@ namespace mess2_algorithms
         virtual Path find_path(std::shared_ptr<CBSNode> &_node, const ConstraintTable &_constraints_init, const std::vector<std::shared_ptr<Path>> &_paths, double _lowerbound) = 0;
 
 
-        friend class SpaceTimeAStar; // make private attributes and methods accessible to SpaceTimeAStar class
+        friend class SpaceTimeAStar;
         friend class CBS;
-
 
         int index_actor;
         std::shared_ptr<Actor> actor;
