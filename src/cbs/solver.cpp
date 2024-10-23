@@ -82,7 +82,7 @@ namespace mess2_algorithms
         n_hl_generated += 1;
         dummy_start->time_generated = n_hl_generated;
         table_of_all_nodes.push_back(dummy_start);
-        // find_conflicts(dummy_start);
+        find_conflicts(dummy_start);
         score_min = std::max(score_min, (double) dummy_start->g_cummulative);
         threshold_list_focal = score_min * focal_w;
 
@@ -120,6 +120,7 @@ namespace mess2_algorithms
         auto dz = std::abs(*(p1->z) - *(p2->z));
         auto distance = std::sqrt(dx * dx + dy * dy + dz * dz);
         if (distance <= _radius) {
+            std::cout << "GOTCHA" << std::endl;
             return true;
         }
         return false;
@@ -308,7 +309,7 @@ namespace mess2_algorithms
 
         (void) generate_root();
 
-        for (const auto path : paths) {
+        for (const auto &path : paths) {
             std::cout << "g : " << path->back().cost << ", h : " << path->back().heuristic << std::endl;
         }
 
@@ -317,6 +318,106 @@ namespace mess2_algorithms
 
 
         return false;
+    }
+
+
+    void CBS::save_paths(const std::string &_path_goals, bool simplify)
+    {
+        for (auto i = 0; i < instance->n_actors; ++i) {
+            auto path = paths[i];
+            std::stringstream ss;
+            ss << i + 1;
+            std::string index_actor = ss.str();
+
+            std::vector<std::shared_ptr<Vertex>> vertices;
+            std::vector<std::tuple<double, double, double, double>> data;
+
+            auto n_path = static_cast<int>(path->size());
+            for (auto j = 0; j < n_path; ++j) {
+                vertices.push_back(instance->graph->lookup_vertex((*path)[j].index_vertex));
+            }
+
+            if (!simplify) {
+                std::shared_ptr<Vertex> curr;
+                for (auto j = 0; j < n_path; ++j) {
+                    curr = vertices[j];
+                    data.emplace_back(*(curr->point->x), *(curr->point->y), *(curr->point->z), curr->heading);
+                }
+            } else {
+                std::shared_ptr<Vertex> prev;
+                std::shared_ptr<Vertex> curr;
+                std::shared_ptr<Vertex> next;
+                bool is_same_x, is_same_y, is_same_z, will_be_same_x, will_be_same_y, will_be_same_z, is_wait, is_rotate, is_translate_in_plane, is_translate_out_of_plane, will_be_wait, will_be_rotate, will_be_translate_in_plane, will_be_translate_out_of_plane, is_same_theta, will_be_same_theta;
+                
+                data.emplace_back(*(vertices[0]->point->x), *(vertices[0]->point->y), *(vertices[0]->point->z), vertices[0]->heading);
+                for (auto j = 1; j < n_path - 1; ++j) {
+                    prev = vertices[j - 1];
+                    curr = vertices[j];
+                    next = vertices[j + 1];
+
+                    is_same_x = (prev->point->x == curr->point->x);
+                    is_same_y = (prev->point->y == curr->point->y);
+                    is_same_z = (prev->point->z == curr->point->z);
+                    is_same_theta = (prev->heading == curr->heading);
+
+                    will_be_same_x = (next->point->x == curr->point->x);
+                    will_be_same_y = (next->point->y == curr->point->y);
+                    will_be_same_z = (next->point->z == curr->point->z);
+                    will_be_same_theta = (next->heading == curr->heading);
+
+                    is_wait = (is_same_x && is_same_y && is_same_theta);
+                    is_rotate = (is_same_x && is_same_y && !is_same_theta);
+                    is_translate_in_plane = (is_same_theta && !is_wait && !is_rotate && is_same_z);
+                    is_translate_out_of_plane = (is_same_theta && !is_wait && !is_rotate && is_same_x && is_same_y);
+
+                    will_be_wait = (will_be_same_x && will_be_same_y && will_be_same_theta);
+                    will_be_rotate = (will_be_same_x && will_be_same_y && !will_be_same_theta);
+                    will_be_translate_in_plane = (will_be_same_theta && !will_be_wait && !will_be_rotate && will_be_same_z);
+                    will_be_translate_out_of_plane = (will_be_same_theta && !will_be_wait && !will_be_rotate && will_be_same_x && will_be_same_y);
+
+                    if (is_wait || is_rotate) {
+                        data.emplace_back(*(curr->point->x), *(curr->point->y), *(curr->point->z), curr->heading);
+                    } 
+                    
+                    if (is_translate_in_plane && !will_be_translate_in_plane) {
+                        data.emplace_back(*(curr->point->x), *(curr->point->y), *(curr->point->z), curr->heading);
+                    }
+
+                    if (is_translate_out_of_plane && !will_be_translate_out_of_plane) {
+                        data.emplace_back(*(curr->point->x), *(curr->point->y), *(curr->point->z), curr->heading);
+                    }
+                }
+                data.emplace_back(*(vertices.back()->point->x), *(vertices.back()->point->y), *(vertices.back()->point->z), vertices.back()->heading);
+            }
+
+            auto path_goal = _path_goals + "actor" + index_actor + ".csv";
+            std::string path_new;
+            if (!path_goal.empty() && path_goal[0] == '~') {
+                const char* home = getenv("HOME");
+                if (home) {
+                    path_new = std::string(home) + path_goal.substr(1);
+                } else {
+                    throw std::runtime_error("could not determine the home directory");
+                }
+            }
+
+            std::ofstream file(path_new);
+            if (!file.is_open()) {
+                throw std::runtime_error("could not open file for writing");
+            }
+
+            file << "x" << ", " << "y" << ", " << "z" << ", " << "theta" << "\n";
+            double x, y, z, theta;
+            for (auto line : data) {
+                x = std::get<0>(line);
+                y = std::get<1>(line);
+                z = std::get<2>(line);
+                theta = std::get<3>(line);
+                file << x << ", " << y << ", " << z << ", " << theta * (M_PI / 180) << "\n";
+            }
+
+            file.close();
+        }
     }
 
 } // namespace mess2_algorithms

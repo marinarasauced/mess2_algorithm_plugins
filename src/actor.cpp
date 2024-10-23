@@ -164,12 +164,12 @@ namespace mess2_algorithms
                         distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
                     }
                     distances_by_index_point[index_point] = distance;
-                    if (distance > distance_max) {
-                        distance_max = distance;
-                    }
-                    // if (index_point = vertex_target->point->index_point) {
+                    // if (distance > distance_max) {
                     //     distance_max = distance;
                     // }
+                    if (index_point = vertex_target->point->index_point) {
+                        distance_max = distance;
+                    }
                 }
             }
         }
@@ -180,7 +180,7 @@ namespace mess2_algorithms
                     auto distance = distances_by_index_point.find(index_point)->second / distance_max;
                     auto weight = g_by_index_point.find(index_point)->second;
                     auto heuristic = distance * weight;
-                    h_by_index_point[index_point] = heuristic * 4;
+                    h_by_index_point[index_point] = heuristic;
                 }
             }
         }
@@ -231,6 +231,31 @@ namespace mess2_algorithms
                 }
             }
         }
+    }
+
+
+    void Actor::save_actor(const std::string &_path_actor)
+    {
+        std::string path_new;
+        if (!_path_actor.empty() && _path_actor[0] == '~') {
+            const char* home = getenv("HOME");
+            if (home) {
+                path_new = std::string(home) + _path_actor.substr(1);
+            } else {
+                throw std::runtime_error("could not determine the home directory");
+            }
+        }
+
+        std::ofstream file(path_new);
+        if (!file.is_open()) {
+            throw std::runtime_error("could not open file for writing");
+        }
+
+        file << "k_ang" << "," << "k_lin" << "," << "x_tol_ang" << "," << "x_tol_lin" << "," << "u_max_ang" << "," << "u_max_lin" << "," << "radius" << "," << "t_wait" << "\n";
+
+        file << k_ang << "," << k_lin << "," << x_ang_tol << "," << x_lin_tol << "," << u_ang_max << "," << u_lin_max << "," << radius << "," << time_wait << "\n";
+
+        file.close();
     }
 
 } // namespace mess2_algorithms

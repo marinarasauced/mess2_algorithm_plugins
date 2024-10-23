@@ -5,6 +5,11 @@
 class TestX : public rclcpp::Node
 {
 public:
+    std::string path_edges;
+    std::string path_vertices;
+    std::string path_actors;
+    std::string path_goals;
+
     TestX() : Node("testx")
     {
         this->declare_parameter("x_min", -5.0);
@@ -28,6 +33,16 @@ public:
         this->get_parameter("n_y", n_y);
         this->get_parameter("n_z", n_z);
         this->get_parameter("use_diagonals_in_plane", use_diagonals_in_plane);
+
+        this->declare_parameter("path_edges", "~/Projets/mess2/matlab/algorithms/config/edges.csv");
+        this->declare_parameter("path_vertices", "~/Projets/mess2/matlab/algorithms/config/vertices.csv");
+        this->declare_parameter("path_actors", "~/Projets/mess2/matlab/algorithms/config/actors/");
+        this->declare_parameter("path_goals", "~/Projets/mess2/matlab/algorithms/config/goals/");
+
+        this->get_parameter("path_edges", path_edges);
+        this->get_parameter("path_vertices", path_vertices);
+        this->get_parameter("path_actors", path_actors);
+        this->get_parameter("path_goals", path_goals);
     }
 
     void run()
@@ -54,7 +69,7 @@ public:
             graph,
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 0.0, 0.0, 0.0), 
             graph->find_index_vertex_by_xyz_and_heading(0.0, 4.0, 0.0, 0.0),
-            0.1, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
+            2.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor1->runtime_build);
         RCLCPP_INFO(this->get_logger(), "\truntime build ot : %f", actor1->runtime_build_ot);
@@ -65,7 +80,7 @@ public:
             graph,
             graph->find_index_vertex_by_xyz_and_heading(-5.0, -5.0, 0.0, 90.0), 
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 5.0, 0.0, 90.0),
-            0.2, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
+            2.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor2->runtime_build);
         RCLCPP_INFO(this->get_logger(), "\truntime build ot : %f", actor2->runtime_build_ot);
@@ -83,6 +98,24 @@ public:
 
         (void) cbs.solve(10.0);
 
+
+
+
+
+
+
+
+
+
+
+
+        RCLCPP_INFO(this->get_logger(), "saving actors");
+        (void) actor1->save_actor(path_actors + "actor1.csv");
+        (void) actor2->save_actor(path_actors + "actor2.csv");
+
+        RCLCPP_INFO(this->get_logger(), "saving paths");
+        (void) cbs.save_paths(path_goals, true);
+
         RCLCPP_INFO(this->get_logger(), "done");
     }
 
@@ -97,6 +130,7 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
     auto node = std::make_shared<TestX>();
     (void) node->run();
+    rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
 }

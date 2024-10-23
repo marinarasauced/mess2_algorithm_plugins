@@ -46,6 +46,7 @@ namespace mess2_algorithms
         double radius, k_ang, k_lin, x_ang_tol, x_lin_tol, u_ang_max, u_lin_max; // actor attribute for computations
 
         std::list<std::shared_ptr<Key3D>> occupancies_symbolic; // symbolic map of occupancies via key steps from any given index at i, j, k
+        double time_wait = 5.0;
 
 
         /**
@@ -129,6 +130,12 @@ namespace mess2_algorithms
         }
 
 
+        /**
+         * 
+         */
+        void save_actor(const std::string &_path_actor);
+
+
     private:
         boost::unordered_map<int, std::list<std::shared_ptr<Key3D>>> occupancies_by_index_point; // unordered map of occupancies by index point
 
@@ -149,10 +156,10 @@ namespace mess2_algorithms
          */
         double compute_time_wait(const std::shared_ptr<Edge> &_edge)
         {
-            if (_edge->type != edge_type::WAIT) {
+            if (_edge->type != edge_type::WAIT && _edge != nullptr) {
                 return 0.0;
             }
-            return 5.0;
+            return time_wait;
         }
 
         /**

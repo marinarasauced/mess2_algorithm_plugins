@@ -65,6 +65,12 @@ namespace mess2_algorithms
         CBS(std::shared_ptr<Instance> &_instance, bool _sipp, int _screen);
 
 
+        /**
+         * 
+         */
+        void save_paths(const std::string &_path_goals, bool simplify);
+
+
     private:
         bool target_reasoning;
         bool disjoint_splitting;
