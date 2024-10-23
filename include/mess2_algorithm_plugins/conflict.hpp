@@ -2,6 +2,7 @@
 #define MESS2_ALGORITHM_PLUGINS_CONFLICT_HPP
 
 #include "mess2_algorithm_plugins/common.hpp"
+#include "mess2_algorithm_plugins/graph.hpp"
 
 namespace mess2_algorithms
 {
@@ -111,18 +112,16 @@ namespace mess2_algorithms
          * 
          * @param _index_actor1 the index of the first actor in the conflict.
          * @param _index_actor2 the index of the second actor in the conflict.
-         * @param _index_key the index of the key representing the point in the graph.
-         * @param _t1 the time at which the conflict begins.
-         * @param _t2 the time at which the conflict ends.
+         * 
          */
-        void define_as_point(int &_index_actor1, int &_index_actor2, int &_index_key, double &_t1, double &_t2, double &_tX)
+        void define_as_point(int &_index_actor1, int &_index_actor2, int &_index_key1, int &_index_key2, double &_t11, double &_t12, const double &_t21, const double &_t22, const double &_radius)
         {
             constraint1.clear();
             constraint2.clear();
             this->index_actor1 = _index_actor1;
             this->index_actor2 = _index_actor2;
-            this->constraint1.emplace_back(index_actor1, _index_key, _t1, _t2, _tX, constraint_type::POINT);
-            this->constraint2.emplace_back(index_actor2, _index_key, _t1, _t2, _tX, constraint_type::POINT);
+            this->constraint1.emplace_back(index_actor1, _index_key2, _t21, _t22, _radius, constraint_type::POINT);
+            this->constraint2.emplace_back(index_actor2, _index_key1, _t11, _t12, _radius, constraint_type::POINT);
             type = conflict_type::STANDARD;
         }
 

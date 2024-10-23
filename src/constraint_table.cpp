@@ -147,11 +147,11 @@ namespace mess2_algorithms
             case constraint_type::POINT:
                 if (_index_actor == i1) {
                     _key1 = instance->graph->lookup_key(i2);
-                    auto keys = instance->actors[i1]->lookup_occupancies_symbolically(instance->graph, _key1->i, _key1->j, _key1->k, instance->actors[i1]->occupancies_symbolic);
+                    auto occupancies_symbolic = compute_occupancies_symbolically(instance->graph, tX);
+                    auto keys = instance->actors[i1]->lookup_occupancies_symbolically(instance->graph, _key1->i, _key1->j, _key1->k, occupancies_symbolic);
 
                     for (auto key : keys) {
-                        auto index_point = instance->graph->find_index_point(key->i, key->j, key->k);
-                        (void) insert_to_ct(index_point, t1, t2);
+                        (void) insert_to_ct(key->index_key, t1, t2);
                     }
                 }
                 break;

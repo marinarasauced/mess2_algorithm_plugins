@@ -131,7 +131,7 @@ namespace mess2_algorithms
         auto path1 = *paths[_index_actor1];
         auto path2 = *paths[_index_actor2];
         auto counter = std::pair<int, int>(0, 0);
-        auto sizes = std::pair<int, int>(static_cast<int>(path1.size()), static_cast<int>(path2.size()));
+        auto sizes = std::pair<int, int>(static_cast<int>(path1.size()) - 1, static_cast<int>(path2.size()) - 1);
 
         std::pair<std::list<std::shared_ptr<Key3D>>, std::list<std::shared_ptr<Key3D>>> occupancies;
 
@@ -157,19 +157,48 @@ namespace mess2_algorithms
                 vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
                 key2 = vertex2->point->key;
                 occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
-                
-                counter.second += 1;
+                if (counter.second < sizes.second) {
+                    counter.second += 1;
+                }
 
             // update first actor
             } else {
                 vertex1 = instance->graph->lookup_vertex(path1[counter.first].index_vertex);
                 key1 = vertex1->point->key;
                 occupancies.first = actor1->lookup_occupancies_symbolically(instance->graph, key1->i, key1->j, key1->k, actor1->occupancies_symbolic);
-                counter.first += 1;
+                if (counter.first < sizes.first) {
+                    counter.first += 1;
+                }
             }
 
             // determine if any collisions occur
             bool is_conflicting = find_collisions(occupancies);
+
+            // if collisions occur ...
+            if (is_conflicting) {
+                auto conflict = std::make_shared<Conflict>();
+                // first actor reached target
+                if (target_reasoning && counter.first == sizes.first) {
+                    conflict->define_as_target(_index_actor1, _index_actor2, vertex1->index_vertex, path1[counter.first - 1].time, path1[counter.first].time, path1[counter.first].time);
+
+                // second actor reached target 
+                } else if (target_reasoning && counter.second == sizes.second) {
+                    conflict->define_as_target(_index_actor2, _index_actor1, vertex2->index_vertex, path2[counter.second - 1].time, path2[counter.second].time, path2[counter.second].time);
+
+                // neither actor at target, define as point (multi point additions in ct build so only provide single index here (key indices = point indices given graph generation nature))
+                } else {
+                    auto i11 = std::max(int(0), counter.first - 2);
+                    auto i12 = std::min(counter.first, sizes.first);
+                    auto i21 = std::max(int(0), counter.second - 2);
+                    auto i22 = std::min(counter.second, sizes.second);
+
+                    auto t11 = path1[i11].time;
+                    auto t12 = path1[i12].time;
+                    auto t21 = path2[i21].time;
+                    auto t22 = path2[i22].time;
+                    conflict->define_as_point(_index_actor1, _index_actor2, key1->index_key, key2->index_key, t11, t12, t21, t22, actor1->radius + actor2->radius);
+                }
+            }
         }
     }
 
