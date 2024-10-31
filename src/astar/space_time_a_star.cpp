@@ -59,10 +59,9 @@ namespace mess2_algorithms
         // auto visits = std::vector<int>(instance->graph->n_vertices, 0);
 
         while (!list_open.empty())
-        // for (int iii = 0; iii < 1000; ++iii)
+        // for (auto wter = 0; wter < 2000; ++wter)
         {
-            // std::cout << std::endl;
-            // auto tic = std::clock();
+ 
             update_list_focal();
             auto curr = pop_node();
             
@@ -85,21 +84,14 @@ namespace mess2_algorithms
                 continue;
             }
 
-            // auto toc = (double) (std::clock() - tic) / CLOCKS_PER_SEC * 1000000;
-            // std::cout << toc << ", ";
-
             auto edges_possible = instance->graph->lookup_edges(curr->edge_prev->vertex_child->index_vertex, curr->edge_prev->type);
-            // std::cout << curr->edge_prev->index_edge << " : ";
-            // std::cout << std::endl;
             for (const auto &edge : edges_possible)
             {
-                // std::cout << edge->index_edge;
                 auto dt = actor->lookup_t(edge->index_edge);
                 auto t_next = curr->t_curr + dt;
                 // static logic i need to reread from ref
 
                 if (_constraint_table.is_constrained(edge->vertex_child->point->index_point, t_next) || actor->lookup_obstacle_avoidance_table(edge->vertex_child->point->index_point)) {
-                    // std::cout << "constrainted" << std::endl;
                     continue;
                 }
 
@@ -108,7 +100,7 @@ namespace mess2_algorithms
 
                 auto dh = actor->lookup_h(edge->vertex_child->point->index_point);
                 auto h_next = curr->h_curr + dh * dt;
-                // h_next = 0.0;
+                h_next = 0.0;
                 // if score next is greater than allowable score, continue
 
                 auto next = std::make_shared<AStarNode>(g_next, h_next, t_next, static_cast<int>(table_of_all_nodes.size()), curr, edge);
@@ -169,7 +161,6 @@ namespace mess2_algorithms
                 }
                 next.reset();
             }
-            // std::cout << (double) (std::clock() - tic) / CLOCKS_PER_SEC * 1000000 << std::endl;
         }
         (void) release_nodes();
         // int visits_max = 0;

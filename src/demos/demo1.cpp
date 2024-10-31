@@ -109,12 +109,12 @@ public:
 
 
 
-        RCLCPP_INFO(this->get_logger(), "saving actors");
-        (void) actor1->save_actor(path_actors + "actor1.csv");
-        (void) actor2->save_actor(path_actors + "actor2.csv");
+        // RCLCPP_INFO(this->get_logger(), "saving actors");
+        // (void) actor1->save_actor(path_actors + "actor1.csv");
+        // (void) actor2->save_actor(path_actors + "actor2.csv");
 
-        RCLCPP_INFO(this->get_logger(), "saving paths");
-        (void) cbs.save_paths(path_goals, true);
+        // RCLCPP_INFO(this->get_logger(), "saving paths");
+        // (void) cbs.save_paths(path_goals, true);
 
         RCLCPP_INFO(this->get_logger(), "done");
     }

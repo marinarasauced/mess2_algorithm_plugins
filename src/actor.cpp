@@ -164,12 +164,12 @@ namespace mess2_algorithms
                         distance = (dx + dy + (std::sqrt(2) - 2) * std::min(dx, dy)) + dz;
                     }
                     distances_by_index_point[index_point] = distance;
-                    // if (distance > distance_max) {
-                    //     distance_max = distance;
-                    // }
-                    if (index_point = vertex_target->point->index_point) {
+                    if (distance > distance_max) {
                         distance_max = distance;
                     }
+                    // if (index_point == vertex_target->point->index_point) {
+                    //     distance_max = distance;
+                    // }
                 }
             }
         }
