@@ -21,7 +21,7 @@ namespace mess2_algorithms
         /**
          * 
          */
-        ConstraintTable() = default;
+        ConstraintTable(const std::shared_ptr<Instance> &_instance) : instance(_instance) {};
 
 
         /**

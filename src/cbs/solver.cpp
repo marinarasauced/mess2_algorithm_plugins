@@ -11,7 +11,7 @@ namespace mess2_algorithms
     // heuristic_helper(instance.getDefaultNumberOfAgents(), paths, search_engines, initial_constraints, mdd_helper)
     {
         clock_t t = std::clock();
-        initial_constraints.resize(instance->n_actors, ConstraintTable());
+        initial_constraints.resize(instance->n_actors, ConstraintTable(instance));
         search_engines.resize(instance->n_actors);
         for (int iter = 0; iter < instance->n_actors; ++iter) {
             if (_sipp) {
@@ -58,7 +58,7 @@ namespace mess2_algorithms
                 paths_found_initially[i] = search_engines[i]->find_path(dummy_start, initial_constraints[i], paths, 0.0);
 
                 if (paths_found_initially[i].empty()) {
-                    std::cout << "CBS::generate_root : no path exists for actor " << i << std::endl;
+                    // std::cout << "CBS::generate_root : no path exists for actor " << i << std::endl;
                     return false;
                 }
                 paths[i] = std::make_shared<Path>(paths_found_initially[i]);
@@ -120,7 +120,7 @@ namespace mess2_algorithms
         auto dz = std::abs(*(p1->z) - *(p2->z));
         auto distance = std::sqrt(dx * dx + dy * dy + dz * dz);
         if (distance <= _radius) {
-            std::cout << "GOTCHA" << std::endl;
+            // std::cout << "GOTCHA" << std::endl;
             return true;
         }
         return false;
@@ -150,29 +150,54 @@ namespace mess2_algorithms
         double t2 = 0.0;
         std::shared_ptr<Vertex> vertex1;
         std::shared_ptr<Vertex> vertex2;
+        bool is_done1 = false;
+        bool is_done2 = false;
 
         while (counter != sizes) {
             // select next lowest time instance
             t1 = path1[counter.first].time;
             t2 = path2[counter.second].time;
-            
-            // update second actor location and conflictsz
-            if (t2 < t1 && counter.second != sizes.second) {
-                vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
-                key2 = vertex2->point->key;
-                occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
-                if (counter.second < sizes.second) {
-                    counter.second += 1;
-                }
 
-            // update first actor
-            } else {
+            // std::cout << t1 << "(" << counter.first << "/" << sizes.first << ")" << " | " << t2 << "(" << counter.second << "/" << sizes.second << ")" << std::endl;
+
+
+            if (t1 <= t2 && !is_done1) {
                 vertex1 = instance->graph->lookup_vertex(path1[counter.first].index_vertex);
                 key1 = vertex1->point->key;
                 occupancies.first = actor1->lookup_occupancies_symbolically(instance->graph, key1->i, key1->j, key1->k, actor1->occupancies_symbolic);
                 if (counter.first < sizes.first) {
                     counter.first += 1;
                 }
+            } else if (t2 < t1 && !is_done2) {
+                vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
+                key2 = vertex2->point->key;
+                occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
+                if (counter.second < sizes.second) {
+                    counter.second += 1;
+                }
+            } else if (t1 <= t2 && is_done1 && !is_done2) {
+                vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
+                key2 = vertex2->point->key;
+                occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
+                if (counter.second < sizes.second) {
+                    counter.second += 1;
+                }
+            } else if (t2 < t1 && !is_done1 && is_done2) {
+                vertex1 = instance->graph->lookup_vertex(path1[counter.first].index_vertex);
+                key1 = vertex1->point->key;
+                occupancies.first = actor1->lookup_occupancies_symbolically(instance->graph, key1->i, key1->j, key1->k, actor1->occupancies_symbolic);
+                if (counter.first < sizes.first) {
+                    counter.first += 1;
+                }
+            } else {
+                //
+            }
+
+            if (!is_done1 && counter.first == sizes.first) {
+                is_done1 = true;
+            }
+            if (!is_done2 && counter.second == sizes.second) {
+                is_done2 = true;
             }
 
             // determine if any collisions occur
@@ -307,7 +332,7 @@ namespace mess2_algorithms
 
         time_start = std::clock();
 
-        (void) generate_root();
+        bool is_root = generate_root();
 
         // for (const auto &path : paths) {
         //     std::cout << "g : " << path->back().cost << ", h : " << path->back().heuristic << std::endl;
@@ -317,7 +342,7 @@ namespace mess2_algorithms
 
 
 
-        return false;
+        return is_root;
     }
 
 

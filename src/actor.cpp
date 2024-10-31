@@ -14,21 +14,21 @@ namespace mess2_algorithms
             res_x = 0.0;
             steps_x = 0;
         } else {
-            res_x = (_graph->lookup_x(_graph->n_i - 1) - _graph->lookup_x(0));
+            res_x = (_graph->lookup_x(_graph->n_i - 1) - _graph->lookup_x(0)) / _graph->n_i;
             steps_x = static_cast<int>(std::ceil(_radius / res_x));
         }
         if (_graph->n_j < 2) {
             res_y = 0.0;
             steps_y = 0;
         } else {
-            res_y = (_graph->lookup_y(_graph->n_j - 1) - _graph->lookup_y(0));
+            res_y = (_graph->lookup_y(_graph->n_j - 1) - _graph->lookup_y(0)) / _graph->n_j;
             steps_y = static_cast<int>(std::ceil(_radius / res_y));
         }
         if (_graph->n_k < 2) {
             res_z = 0.0;
             steps_z = 0;
         } else {
-            res_z = (_graph->lookup_z(_graph->n_k - 1) - _graph->lookup_z(0));
+            res_z = (_graph->lookup_z(_graph->n_k - 1) - _graph->lookup_z(0)) / _graph->n_k;
             steps_z = static_cast<int>(std::ceil(_radius / res_z));
         }
 

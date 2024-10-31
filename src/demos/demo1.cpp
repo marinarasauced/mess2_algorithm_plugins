@@ -9,6 +9,7 @@ public:
     std::string path_vertices;
     std::string path_actors;
     std::string path_goals;
+    bool result = false;
 
     TestX() : Node("testx")
     {
@@ -34,10 +35,10 @@ public:
         this->get_parameter("n_z", n_z);
         this->get_parameter("use_diagonals_in_plane", use_diagonals_in_plane);
 
-        this->declare_parameter("path_edges", "~/Projets/mess2/matlab/algorithms/config/edges.csv");
-        this->declare_parameter("path_vertices", "~/Projets/mess2/matlab/algorithms/config/vertices.csv");
-        this->declare_parameter("path_actors", "~/Projets/mess2/matlab/algorithms/config/actors/");
-        this->declare_parameter("path_goals", "~/Projets/mess2/matlab/algorithms/config/goals/");
+        this->declare_parameter("path_edges", "~/Projets/ROS2/mess2/matlab/algorithms/config/edges.csv");
+        this->declare_parameter("path_vertices", "~/Projets/ROS2/mess2/matlab/algorithms/config/vertices.csv");
+        this->declare_parameter("path_actors", "~/Projets/ROS2/mess2/matlab/algorithms/config/actors/");
+        this->declare_parameter("path_goals", "~/Projets/ROS2/mess2/matlab/algorithms/config/goals/");
 
         this->get_parameter("path_edges", path_edges);
         this->get_parameter("path_vertices", path_vertices);
@@ -71,6 +72,7 @@ public:
             graph->find_index_vertex_by_xyz_and_heading(0.0, 4.0, 0.0, 0.0),
             2.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
+        actor1->name = "actor1";
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor1->runtime_build);
         RCLCPP_INFO(this->get_logger(), "\truntime build ot : %f", actor1->runtime_build_ot);
 
@@ -82,6 +84,7 @@ public:
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 5.0, 0.0, 90.0),
             2.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
+        actor2->name = "actor2";
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor2->runtime_build);
         RCLCPP_INFO(this->get_logger(), "\truntime build ot : %f", actor2->runtime_build_ot);
 
@@ -96,7 +99,7 @@ public:
         auto cbs = mess2_algorithms::CBS(instance, false, 0);
         RCLCPP_INFO(this->get_logger(), "\truntime build preprocess : %f", cbs.runtime_preprocessing);
 
-        (void) cbs.solve(10.0);
+        result = cbs.solve(10.0);
 
 
 
@@ -107,14 +110,16 @@ public:
 
 
 
+        if (result) {
+            RCLCPP_INFO(this->get_logger(), "saving actors");
+            (void) actor1->save_actor(path_actors + "actor1.csv");
+            (void) actor2->save_actor(path_actors + "actor2.csv");
 
-
-        // RCLCPP_INFO(this->get_logger(), "saving actors");
-        // (void) actor1->save_actor(path_actors + "actor1.csv");
-        // (void) actor2->save_actor(path_actors + "actor2.csv");
-
-        // RCLCPP_INFO(this->get_logger(), "saving paths");
-        // (void) cbs.save_paths(path_goals, true);
+            RCLCPP_INFO(this->get_logger(), "saving paths");
+            (void) cbs.save_paths(path_goals, true);
+        } else {
+            RCLCPP_INFO(this->get_logger(), "algorithm failed");
+        }
 
         RCLCPP_INFO(this->get_logger(), "done");
     }

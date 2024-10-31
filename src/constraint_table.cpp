@@ -35,6 +35,7 @@ namespace mess2_algorithms
         time_latest = _other.time_latest;
         ct = _other.ct;
         landmarks = _other.landmarks;
+        instance = _other.instance;
     }
 
     void ConstraintTable::build_ct(int &_index_actor, const std::shared_ptr<CBSNode> &_node)
@@ -209,11 +210,11 @@ namespace mess2_algorithms
 
     void ConstraintTable::build_cat(int &_index_actor, const std::vector<std::shared_ptr<Path>> &_paths)
     {
-        if (time_max >= MAX_TIMESTEP || time_latest > time_max) {
+        if (time_min >= MAX_TIMESTEP || time_min > time_max) {
             return; // cannot reach goal so do not build cat
         }
 
-        for (int i1 = 0; i1 < instance->n_actors; ++ i1) {
+        for (auto i1 = 0; i1 < instance->n_actors; ++i1) {
             if (_index_actor == i1 || _paths[i1] == nullptr) {
                 continue;
             }
@@ -287,13 +288,24 @@ namespace mess2_algorithms
         }
 
         auto iterator2 = ct.find(_index_point);
-        if (iterator2 == ct.end()) {
+        auto iterator3 = cat.find(_index_point);
+        if (iterator2 == ct.end() && iterator3 == cat.end()) {
             return false;
         }
 
-        for (const auto &time_range : iterator2->second) {
-            if (_t >= time_range.first && _t <= time_range.second) {
-                return true;
+        if (iterator2 != ct.end()) {
+            for (const auto &time_range : iterator2->second) {
+                if (_t >= time_range.first && _t <= time_range.second) {
+                    return true;
+                }
+            }
+        }
+
+        if (iterator3 != cat.end()) {
+            for (const auto &time_range : iterator3->second) {
+                if (_t >= time_range.first && _t <= time_range.second) {
+                    return true;
+                }
             }
         }
 
