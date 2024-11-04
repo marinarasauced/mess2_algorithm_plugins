@@ -69,7 +69,7 @@ namespace mess2_algorithms
         /**
          * @brief builds the conflict avoidance table for a given actor assuming knowledge of the previous actor's paths.
          */
-        void build_cat(int &_index_actor, const std::vector<std::shared_ptr<Path>> &_paths);
+        void build_cat(int &_index_actor, const std::vector<Path> &_paths);
 
 
         /**
@@ -80,6 +80,14 @@ namespace mess2_algorithms
          * @param _t2 the upperbound of the time constraint on the point.
          */
         void insert_to_ct(int &_index_point, double &_t1, double &_t2); // insert a 
+
+
+        /**
+         * 
+         */
+        void clear_ct() {
+            ct.clear();
+        }
 
 
         /**

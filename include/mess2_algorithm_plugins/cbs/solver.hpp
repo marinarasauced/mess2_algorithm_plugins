@@ -10,6 +10,7 @@ namespace mess2_algorithms
     {
     public:
         bool random_root = false; // randomize the order of actors in the root ct node
+        bool use_cat = false;
 
         double runtime = 0.0;
         double runtime_generate_children = 0.0; // runtime of generating child nodes
@@ -68,12 +69,12 @@ namespace mess2_algorithms
         /**
          * 
          */
-        void save_paths(const std::string &_path_goals, bool simplify);
+        void save_paths(const std::string &_path_goals, bool _simplify);
 
 
     private:
         bool target_reasoning;
-        bool disjoint_splitting;
+        bool disjoint_splitting = true;
         bool mutex_reasoning;
         bool bypass;
         bool PC;
@@ -91,7 +92,7 @@ namespace mess2_algorithms
 
         int screen;
 
-        double time_limit;
+        double time_limit = 10.0;
         int node_limit = MAX_NODES;
         double focal_w = 1.0;
         double cost_upperbound = MAX_COST;
@@ -99,7 +100,7 @@ namespace mess2_algorithms
         std::vector<ConstraintTable> initial_constraints;
         std::clock_t time_start;
 
-        std::vector<std::shared_ptr<Path>> paths;
+        std::vector<Path> paths;
         std::vector<Path> paths_found_initially;
         std::vector<std::shared_ptr<SingleActorSolver>> search_engines; // used to find single actors' paths and mdd
 
@@ -115,7 +116,19 @@ namespace mess2_algorithms
         /**
          * 
          */
+        bool generate_child(std::shared_ptr<CBSNode> &_node, const std::shared_ptr<CBSNode> &_parent);
+
+
+        /**
+         * 
+         */
         void copy_conflicts(const std::list<std::shared_ptr<Conflict>> &_conflicts, std::list<std::shared_ptr<Conflict>> &_copy, const std::list<int> &_actors_excluded);
+
+
+        /**
+         * 
+         */
+        std::shared_ptr<Conflict> choose_conflict(const std::shared_ptr<CBSNode> &_node) const;
 
 
         /**
@@ -134,6 +147,18 @@ namespace mess2_algorithms
          * 
          */
         void find_conflicts(std::shared_ptr<CBSNode>& _node, int &_index_actor1, int &_index_actor2);
+
+
+        /**
+         * 
+         */
+        void update_list_focal();
+
+
+        /**
+         * 
+         */
+        inline void update_paths(const std::shared_ptr<CBSNode> &_node);
     };
 
 } // namespace mess2_algorithms

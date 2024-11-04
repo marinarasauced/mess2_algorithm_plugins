@@ -33,7 +33,7 @@ namespace mess2_algorithms
     {
         dummy_start = std::make_shared<CBSNode>();
         dummy_start->g_cummulative = 0.0;
-        paths.resize(instance->n_actors, nullptr);
+        paths.resize(instance->n_actors);
 
         // mdd_helper.init(num_of_agents);
     	// heuristic_helper.init();
@@ -54,14 +54,38 @@ namespace mess2_algorithms
                 std::shuffle(std::begin(actors), std::end(actors), g);
             }
 
-            for (auto i : actors) {
-                paths_found_initially[i] = search_engines[i]->find_path(dummy_start, initial_constraints[i], paths, 0.0);
+            for (auto iter = 0; iter < instance->n_actors; ++iter) {
+                auto i = actors[iter]; // index of the current actor
+
+                if (use_cat) {
+                    for (auto jter = iter + 1; jter < instance->n_actors; ++jter) {
+                        auto j = actors[jter]; // index of an actor subsequent to the current actor
+                        std::cout << i << j << std::endl;
+
+                        auto actor_temp = instance->lookup_actor(j);
+                        auto vertex_source_temp = instance->graph->lookup_vertex(actor_temp->index_source);
+                        auto key_temp = vertex_source_temp->point->key;
+
+                        auto occupancies = actor_temp->lookup_occupancies_symbolically(instance->graph, key_temp->i, key_temp->j, key_temp->k, actor_temp->occupancies_symbolic);
+
+                        auto time_min = MIN_TIMESTEP;
+                        auto time_max = MAX_TIMESTEP;
+
+                        for (const auto &occupancy : occupancies) {
+                            initial_constraints[i].insert_to_ct(occupancy->index_key, time_min, time_max);
+                            auto point = instance->graph->lookup_point(occupancy->index_key);
+                            std::cout << "added at (" << *(point->x) << ", " << *(point->y) << ", " << *(point->z) << ")" << std::endl;
+                        }
+                    }
+                }
+
+                paths_found_initially[i] = search_engines[i]->find_path(dummy_start, initial_constraints[i], paths, 0.0, use_cat);
 
                 if (paths_found_initially[i].empty()) {
-                    // std::cout << "CBS::generate_root : no path exists for actor " << i << std::endl;
+                    std::cout << "CBS::generate_root : no path exists for actor " << i << std::endl;
                     return false;
                 }
-                paths[i] = std::make_shared<Path>(paths_found_initially[i]);
+                paths[i] = paths_found_initially[i];
                 dummy_start->makespan = std::max(dummy_start->makespan, paths_found_initially[i].size());
                 dummy_start->g_cummulative += (double) paths_found_initially[i][paths_found_initially[i].size() - 1].score;
                 n_ll_expanded += search_engines[i]->n_expanded;
@@ -69,7 +93,7 @@ namespace mess2_algorithms
             }
         } else {
             for (auto i = 0; i < instance->n_actors; ++i) {
-                paths[i] = std::make_shared<Path>(paths_found_initially[i]);
+                paths[i] = paths_found_initially[i];
                 dummy_start->makespan = std::max(dummy_start->makespan, paths_found_initially[i].size());
                 dummy_start->g_cummulative += (double) paths_found_initially[i][paths_found_initially[i].size() - 1].score;
             }
@@ -82,7 +106,7 @@ namespace mess2_algorithms
         n_hl_generated += 1;
         dummy_start->time_generated = n_hl_generated;
         table_of_all_nodes.push_back(dummy_start);
-        find_conflicts(dummy_start);
+        (void) find_conflicts(dummy_start);
         score_min = std::max(score_min, (double) dummy_start->g_cummulative);
         threshold_list_focal = score_min * focal_w;
 
@@ -131,8 +155,8 @@ namespace mess2_algorithms
     {
         auto actor1 = instance->actors[_index_actor1];
         auto actor2 = instance->actors[_index_actor2];
-        auto path1 = *paths[_index_actor1];
-        auto path2 = *paths[_index_actor2];
+        auto path1 = paths[_index_actor1];
+        auto path2 = paths[_index_actor2];
         auto counter = std::pair<int, int>(0, 0);
         auto sizes = std::pair<int, int>(static_cast<int>(path1.size()) - 1, static_cast<int>(path2.size()) - 1);
 
@@ -322,6 +346,58 @@ namespace mess2_algorithms
     }
 
 
+    void CBS::update_list_focal()
+    {
+        auto head_open = list_open.top();
+        if (head_open->g_cummulative + head_open->h_cummulative > score_min)
+        {
+            score_min = head_open->g_cummulative + head_open->h_cummulative;
+            double threshold_list_focal_new = score_min * focal_w;
+            for (auto n : list_open)
+            {
+                if (n->g_cummulative + n->h_cummulative > threshold_list_focal && n->g_cummulative + n->h_cummulative <= threshold_list_focal_new) {
+                    n->handle_focal = list_focal.push(n);
+                }
+                threshold_list_focal = threshold_list_focal_new;
+            }
+        }
+    }
+
+
+    bool CBS::generate_child(std::shared_ptr<CBSNode> &_node, const std::shared_ptr<CBSNode> &_parent)
+    {
+        clock_t t1 = std::clock();
+        _node->parent = _parent;
+        _node->g_cummulative = _parent->g_cummulative;
+        _node->makespan = _parent->makespan;
+        _node->depth = _parent->depth + 1;
+        int i1, i2;
+        double t1, t2, tX;
+        constraint_type type;
+        assert(_node->constraints.size() > 0);
+        std::tie(i1, i2, t1, t2, tX, type) = _node->constraints.front();
+
+        if (type == constraint_type::LEQLENGTH) {
+            // if ((int)node->constraints.size() == 2) // generated by corridor-target conflict
+            // {
+            //     int a = get<0>(node->constraints.back()); // it is a G-length constraint or a range constraint on this agent
+            //     int lowerbound = (int)paths[a]->size() - 1;
+            //     if (!findPathForSingleAgent(node, a, lowerbound))
+            //     {
+            //         runtime_generate_child += (double)(clock() - t1) / CLOCKS_PER_SEC;
+            //         return false;
+            //     }
+            // }
+            for (auto index_actor = 0; index_actor < instance->n_actors; ++index_actor) {
+                if (i1 == index_actor) {
+                    continue;
+                }
+                // for (auto i)
+            }
+        }
+    }
+
+
     bool CBS::solve(double _time_limit, double _cost_lowerbound, double _cost_upperbound)
     {
         this->score_min = _cost_lowerbound;
@@ -334,22 +410,160 @@ namespace mess2_algorithms
 
         bool is_root = generate_root();
 
+        while (!list_open.empty() && !solution_found) {
+
+            (void) update_list_focal();
+            if (score_min >= cost_upperbound) {
+                solution_cost = score_min;
+                solution_found = false;
+                break;
+            }
+
+            runtime = (double) (std::clock() - time_start) / CLOCKS_PER_SEC;
+            if (runtime > time_limit || n_hl_expanded > node_limit) {
+                solution_cost = -1;
+                solution_found = false;
+                break;
+            }
+
+            auto curr = list_focal.top();
+            list_focal.pop();
+            list_open.erase(curr->handle_open);
+
+            // curr->paths
+            std::cout << curr->conflicts_unknown.size() << std::endl;
+
+            if (curr->conflicts_unknown.size() + curr->conflicts_known.size() == 0) {
+                solution_found = true;
+                solution_cost = curr->g_cummulative;
+                goal_node = curr;
+                break;
+            }
+
+            // some heuristic logic that i am temporarilly omitting
+
+            n_hl_expanded += 1;
+            curr->time_expanded = n_hl_expanded;
+            bool found_bypass = true;
+            while (found_bypass) {
+                if (curr->conflicts_unknown.size() + curr->conflicts_known.size() == 0) {
+                    solution_found = true;
+                    solution_cost = curr->g_cummulative;
+                    goal_node = curr;
+                    break;
+                }
+                found_bypass = false;
+
+                std::shared_ptr<CBSNode> children[2] = { std::make_shared<CBSNode>(), std::make_shared<CBSNode>() };
+
+                curr->conflict_chosen = choose_conflict(curr);
+
+                if (disjoint_splitting && curr->conflict_chosen->type == conflict_type::STANDARD) {
+                    int first = (bool) (std::rand() % 2);
+                    std::cout << "STANDARD CONFLICT IN DISJOINT SPLITTING" << std::endl;
+                    
+                    // if (first) {
+                    //     children[0]->constraints = curr->conflict_chosen->constraint1;
+                    //     int i1, i2;
+                    //     double t1, t2, tX;
+                    //     constraint_type type;
+                    //     std::tie(i1, i2, t1, t2, tX, type) = curr->conflict_chosen->constraint1.back();
+                    // }
+                } else {
+                    children[0]->constraints = curr->conflict_chosen->constraint1;
+                    children[1]->constraints = curr->conflict_chosen->constraint2;
+
+                    // TODO : add corridor and rectangle logic
+                    // if (curr->conflict->type == conflict_type::RECTANGLE && rectangle_helper.strategy == rectangle_strategy::DR)
+                    // {
+                    //     int i = (bool)(rand() % 2);
+                    //     for (const auto constraint : child[1 - i]->constraints)
+                    //     {
+                    //         child[i]->constraints.emplace_back(get<0>(constraint), get<1>(constraint), get<2>(constraint), get<3>(constraint), 
+                    //                                                                             constraint_type::POSITIVE_BARRIER);
+                    //     }
+                    // }
+                    // else if (curr->conflict->type == conflict_type::CORRIDOR && corridor_helper.getStrategy() == corridor_strategy::DC)
+                    // {
+                    //     int i = (bool)(rand() % 2);
+                    //     assert(child[1 - i]->constraints.size() == 1);
+                    //     auto constraint = child[1 - i]->constraints.front();
+                    //     child[i]->constraints.emplace_back(get<0>(constraint), get<1>(constraint), get<2>(constraint), get<3>(constraint),
+                    //         constraint_type::POSITIVE_RANGE);
+                    // }
+                }
+
+                bool solved[2] = { false, false };
+                std::vector<std::vector<PathElement>> copy(paths);
+
+                for (auto i = 0; i < 2; ++i) {
+                    if (i > 0) { paths = copy; }
+                    solved[i] = generate_child(children[i], curr);
+                }
+            }
+
+            
+
         // for (const auto &path : paths) {
         //     std::cout << "g : " << path->back().cost << ", h : " << path->back().heuristic << std::endl;
-        // }
+        }
 
 
 
 
-
-        return is_root;
+        solution_found = true;
+        return solution_found;
     }
 
 
-    void CBS::save_paths(const std::string &_path_goals, bool simplify)
+    std::shared_ptr<Conflict> CBS::choose_conflict(const std::shared_ptr<CBSNode> &_node) const
+    {
+        std::shared_ptr<Conflict> conflict_chosen;
+        if (_node->conflicts_known.empty() && _node->conflicts_unknown.empty()) {
+            return nullptr;
+        } else if (!_node->conflicts_known.empty()) {
+            conflict_chosen = _node->conflicts_known.back();
+            for (const auto &conflict : _node->conflicts_known) {
+                if (*conflict_chosen < *conflict) {
+                    conflict_chosen = conflict;
+                }
+            }
+        } else {
+            conflict_chosen = _node->conflicts_unknown.back();
+            for (const auto &conflict : _node->conflicts_unknown) {
+                if (*conflict_chosen < *conflict) {
+                    conflict_chosen = conflict;
+                }
+            }
+        }
+        return conflict_chosen;
+    }
+
+
+    inline void CBS::update_paths(const std::shared_ptr<CBSNode> &_node)
+    {
+        for (auto i = 0; i < instance->n_actors; ++i) {
+            paths[i] = paths_found_initially[i];
+        }
+        auto curr = _node;
+        std::vector<bool> updated(instance->n_actors, false);
+        while (curr != nullptr) {
+            for (const auto &path : curr->paths) {
+                if (!updated[path.first]) {
+                    paths[path.first] = path.second;
+                    updated[path.first] = true;
+                }
+            }
+            curr = curr->parent;
+        }
+    }
+
+
+    void CBS::save_paths(const std::string &_path_goals, bool _simplify)
     {
         for (auto i = 0; i < instance->n_actors; ++i) {
             auto path = paths[i];
+
             std::stringstream ss;
             ss << i + 1;
             std::string index_actor = ss.str();
@@ -357,12 +571,12 @@ namespace mess2_algorithms
             std::vector<std::shared_ptr<Vertex>> vertices;
             std::vector<std::tuple<double, double, double, double>> data;
 
-            auto n_path = static_cast<int>(path->size());
+            auto n_path = static_cast<int>(path.size());
             for (auto j = 0; j < n_path; ++j) {
-                vertices.push_back(instance->graph->lookup_vertex((*path)[j].index_vertex));
+                vertices.push_back(instance->graph->lookup_vertex(path[j].index_vertex));
             }
 
-            if (!simplify) {
+            if (!_simplify) {
                 std::shared_ptr<Vertex> curr;
                 for (auto j = 0; j < n_path; ++j) {
                     curr = vertices[j];

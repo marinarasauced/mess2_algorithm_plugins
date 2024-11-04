@@ -126,7 +126,7 @@ namespace mess2_algorithms
         /**
          * 
          */
-        virtual Path find_path(std::shared_ptr<CBSNode> &_node, const ConstraintTable &_constraints_init, const std::vector<std::shared_ptr<Path>> &_paths, double _lowerbound) = 0;
+        virtual Path find_path(std::shared_ptr<CBSNode> &_node, const ConstraintTable &_constraints_init, const std::vector<Path> &_paths, double _lowerbound, bool &_use_path_avoidance) = 0;
 
 
         friend class SpaceTimeAStar;

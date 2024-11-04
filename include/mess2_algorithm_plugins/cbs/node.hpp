@@ -88,6 +88,7 @@ namespace mess2_algorithms
         size_t makespan = 0; // makespan over all paths
         double tiebreak = 0.0;
         bool is_h_computed = false;
+        int depth = 0;
 
         double time_expanded;
         double time_generated;

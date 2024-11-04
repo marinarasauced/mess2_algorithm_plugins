@@ -29,6 +29,7 @@
 #include </usr/include/boost/unordered_set.hpp>
 #include </usr/include/yaml-cpp/yaml.h>
 
+#define MIN_TIMESTEP 0.0
 #define MAX_TIMESTEP std::numeric_limits<double>::max() / 2
 #define MAX_COST std::numeric_limits<double>::max() / 2
 #define MAX_NODES std::numeric_limits<int>::max() / 2

@@ -3,7 +3,7 @@
 
 namespace mess2_algorithms
 {
-    Path SpaceTimeAStar::find_path(std::shared_ptr<CBSNode> &_node, const ConstraintTable &_constraints_init, const std::vector<std::shared_ptr<Path>> &_paths, double _lowerbound)
+    Path SpaceTimeAStar::find_path(std::shared_ptr<CBSNode> &_node, const ConstraintTable &_constraints_init, const std::vector<Path> &_paths, double _lowerbound, bool &_use_path_avoidance)
     {
         n_expanded = 0;
         n_generated = 0;
@@ -18,8 +18,10 @@ namespace mess2_algorithms
         }
 
         tic = std::clock();
-        (void) table_constraints.build_cat(index_actor, _paths);
-        runtime_build_cat = (double) (std::clock() - tic) / CLOCKS_PER_SEC;
+        if (_use_path_avoidance) {
+            (void) table_constraints.build_cat(index_actor, _paths);
+            runtime_build_cat = (double) (std::clock() - tic) / CLOCKS_PER_SEC;
+        }
 
         if (table_constraints.get_n_landmarks() > 0) {
             return Path();
@@ -56,7 +58,7 @@ namespace mess2_algorithms
         double time_hold = _constraint_table.lookup_time_hold(vertex_target->point->index_point);
         lowerbound = std::max(time_hold - start->t_curr, std::max(score_min, _lowerbound));
 
-        // auto visits = std::vector<int>(instance->graph->n_vertices, 0);
+        auto visits = std::vector<int>(instance->graph->n_vertices, 0);
 
         while (!list_open.empty())
         // for (auto wter = 0; wter < 2000; ++wter)
@@ -67,12 +69,12 @@ namespace mess2_algorithms
             
             
             // // PLEASE CHANGE THIS JUST TESTING IF N VISITS SLOWS ALG DOWN A LOT
-            // if (visits[curr->edge_prev->vertex_child->index_vertex] > 1) {
-            //     // std::cout << visits[curr->edge_prev->index_edge] << std::endl;
-            //     continue;
-            // } else {
-            //     visits[curr->edge_prev->vertex_child->index_vertex] += 1;
-            // }
+            if (visits[curr->edge_prev->vertex_child->index_vertex] > 2) {
+                // std::cout << visits[curr->edge_prev->index_edge] << std::endl;
+                continue;
+            } else {
+                visits[curr->edge_prev->vertex_child->index_vertex] += 1;
+            }
 
             if (curr->edge_prev->vertex_child->index_vertex == actor->index_target && !curr->wait_at_target && curr->t_curr >= time_hold)
             {

@@ -208,21 +208,21 @@ namespace mess2_algorithms
         }
     }
 
-    void ConstraintTable::build_cat(int &_index_actor, const std::vector<std::shared_ptr<Path>> &_paths)
+    void ConstraintTable::build_cat(int &_index_actor, const std::vector<Path> &_paths)
     {
         if (time_min >= MAX_TIMESTEP || time_min > time_max) {
             return; // cannot reach goal so do not build cat
         }
 
         for (auto i1 = 0; i1 < instance->n_actors; ++i1) {
-            if (_index_actor == i1 || _paths[i1] == nullptr) {
+            if (_index_actor == i1 || _paths[i1].empty()) {
                 continue;
             }
 
             auto radius = instance->actors[_index_actor]->radius + instance->actors[i1]->radius; // sum of radii of two actors in consideration
             auto occupancies_symbolic = compute_occupancies_symbolically(instance->graph, radius);
 
-            auto path = *_paths[i1];
+            auto path = _paths[i1];
             auto n_path = static_cast<int>(path.size());
 
             PathElement elem_prev;
