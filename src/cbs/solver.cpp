@@ -366,7 +366,7 @@ namespace mess2_algorithms
 
     bool CBS::generate_child(std::shared_ptr<CBSNode> &_node, const std::shared_ptr<CBSNode> &_parent)
     {
-        clock_t t1 = std::clock();
+        clock_t time_init = std::clock();
         _node->parent = _parent;
         _node->g_cummulative = _parent->g_cummulative;
         _node->makespan = _parent->makespan;
