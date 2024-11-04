@@ -82,7 +82,7 @@ public:
             graph,
             graph->find_index_vertex_by_xyz_and_heading(-5.0, -5.0, 0.0, 90.0), 
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 5.0, 0.0, 90.0),
-            2.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
+            1.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
         actor2->name = "actor2";
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor2->runtime_build);
@@ -91,8 +91,11 @@ public:
         // create dummy instance
         RCLCPP_INFO(this->get_logger(), "generating instance");
         auto instance = std::make_shared<mess2_algorithms::Instance>(graph);
-        (void) instance->add_actor(actor1);
-        (void) instance->add_actor(actor2);
+        (void) instance->add_actor(actor2, 1);
+        (void) instance->add_actor(actor1, 0);
+        
+        
+        
 
         // create dummy cbs solver
         RCLCPP_INFO(this->get_logger(), "generating cbs solver");

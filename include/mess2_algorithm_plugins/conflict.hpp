@@ -120,8 +120,8 @@ namespace mess2_algorithms
             constraint2.clear();
             this->index_actor1 = _index_actor1;
             this->index_actor2 = _index_actor2;
-            this->constraint1.emplace_back(index_actor1, _index_key2, _t21, _t22, _radius, constraint_type::POINT);
-            this->constraint2.emplace_back(index_actor2, _index_key1, _t11, _t12, _radius, constraint_type::POINT);
+            this->constraint1.emplace_back(index_actor1, _index_key2, _t11, _t12, _radius, constraint_type::POINT);
+            this->constraint2.emplace_back(index_actor2, _index_key1, _t21, _t22, _radius, constraint_type::POINT);
             type = conflict_type::STANDARD;
         }
 

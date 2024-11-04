@@ -69,7 +69,7 @@ namespace mess2_algorithms
             
             
             // // PLEASE CHANGE THIS JUST TESTING IF N VISITS SLOWS ALG DOWN A LOT
-            if (visits[curr->edge_prev->vertex_child->index_vertex] > 2) {
+            if (visits[curr->edge_prev->vertex_child->index_vertex] > 200) {
                 // std::cout << visits[curr->edge_prev->index_edge] << std::endl;
                 continue;
             } else {

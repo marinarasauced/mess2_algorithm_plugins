@@ -9,6 +9,7 @@ namespace mess2_algorithms
             return false;
         }
         for (unsigned iter = 0; iter < _path1.size(); ++iter) {
+            std::cout << _path1[iter].index_vertex << ", " << _path2[iter].index_vertex << ", " << _path1[iter].time << ", " << _path2[iter].time << std::endl;
             if (_path1[iter].index_vertex != _path2[iter].index_vertex || _path1[iter].time != _path2[iter].time) {
                 return false;
             }

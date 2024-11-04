@@ -85,7 +85,7 @@ namespace mess2_algorithms
         double g_cummulative;
         double h_cummulative;
         // double depth;
-        size_t makespan = 0; // makespan over all paths
+        // size_t makespan = 0; // makespan over all paths
         double tiebreak = 0.0;
         bool is_h_computed = false;
         int depth = 0;

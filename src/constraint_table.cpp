@@ -41,6 +41,7 @@ namespace mess2_algorithms
     void ConstraintTable::build_ct(int &_index_actor, const std::shared_ptr<CBSNode> &_node)
     {
         auto curr = _node;
+        std::cout << "ConstraintTable::build_ct : starting build" << std::endl;
         while (curr->parent != nullptr)
         {
             int i1, i2;
@@ -147,6 +148,7 @@ namespace mess2_algorithms
                 break;
             case constraint_type::POINT:
                 if (_index_actor == i1) {
+                    std::cout << t1 << ", " << t2 << std::endl;
                     _key1 = instance->graph->lookup_key(i2);
                     auto occupancies_symbolic = compute_occupancies_symbolically(instance->graph, tX);
                     auto keys = instance->actors[i1]->lookup_occupancies_symbolically(instance->graph, _key1->i, _key1->j, _key1->k, occupancies_symbolic);

@@ -10,7 +10,7 @@ namespace mess2_algorithms
     {
     public:
         bool random_root = false; // randomize the order of actors in the root ct node
-        bool use_cat = false;
+        bool use_cat = true;
 
         double runtime = 0.0;
         double runtime_generate_children = 0.0; // runtime of generating child nodes
@@ -73,8 +73,8 @@ namespace mess2_algorithms
 
 
     private:
-        bool target_reasoning;
-        bool disjoint_splitting = true;
+        bool target_reasoning = false;
+        bool disjoint_splitting = false;
         bool mutex_reasoning;
         bool bypass;
         bool PC;
@@ -117,6 +117,12 @@ namespace mess2_algorithms
          * 
          */
         bool generate_child(std::shared_ptr<CBSNode> &_node, const std::shared_ptr<CBSNode> &_parent);
+
+
+        /**
+         * 
+         */
+        bool find_path_for_single_actor(std::shared_ptr<CBSNode> &_node, int _index_actor, double _lowerbound);
 
 
         /**
