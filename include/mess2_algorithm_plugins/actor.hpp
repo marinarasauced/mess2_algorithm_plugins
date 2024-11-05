@@ -48,8 +48,6 @@ namespace mess2_algorithms
         std::list<std::shared_ptr<Key3D>> occupancies_symbolic; // symbolic map of occupancies via key steps from any given index at i, j, k
         double time_wait = 5.0;
         std::string name; // name of the actor
-        int index_actor; // index of the actor for saving convention
-        int index_priority; // index of the actor for priority convention
 
 
         /**

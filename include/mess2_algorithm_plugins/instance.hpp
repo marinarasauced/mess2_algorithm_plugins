@@ -18,6 +18,7 @@ namespace mess2_algorithms
         std::shared_ptr<Graph> graph;
         std::vector<std::shared_ptr<Actor>> actors;
         int n_actors;
+        std::vector<int> indices_actors;
 
 
         /**
@@ -37,8 +38,7 @@ namespace mess2_algorithms
          * 
          * @param _actor the shared Actor pointer to add to the instance.
          */
-        void add_actor(std::shared_ptr<Actor> &_actor, int _index) {
-            _actor->index_actor = _index;
+        void add_actor(std::shared_ptr<Actor> &_actor) {
             actors.push_back(_actor);
             n_actors += 1;
         }

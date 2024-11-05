@@ -102,7 +102,7 @@ namespace mess2_algorithms
 
         std::vector<Path> paths;
         std::vector<Path> paths_found_initially;
-        std::vector<std::shared_ptr<SingleActorSolver>> search_engines; // used to find single actors' paths and mdd
+        std::vector<std::shared_ptr<SingleActorSolver>> search_engines; // used to find single actors' paths and mdd; in order that actors are added to instance 
 
         std::shared_ptr<Instance> &instance;
 

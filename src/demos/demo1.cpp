@@ -91,8 +91,8 @@ public:
         // create dummy instance
         RCLCPP_INFO(this->get_logger(), "generating instance");
         auto instance = std::make_shared<mess2_algorithms::Instance>(graph);
-        (void) instance->add_actor(actor2, 1);
-        (void) instance->add_actor(actor1, 0);
+        (void) instance->add_actor(actor1);
+        (void) instance->add_actor(actor2);
         
         
         

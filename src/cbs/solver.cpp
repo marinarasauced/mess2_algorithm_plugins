@@ -1,6 +1,9 @@
 
 #include "mess2_algorithm_plugins/cbs/solver.hpp"
 
+// "i" domain (corresponds to the order that actors are added to instance) : instance->actors, search engines
+// "j" domain (corresponds to the order indices_actors generated in root) : 
+
 namespace mess2_algorithms
 {
     CBS::CBS(std::shared_ptr<Instance> &_instance, bool _sipp, int _screen) : screen(_screen), focal_w(1.0), instance(_instance)
@@ -15,12 +18,12 @@ namespace mess2_algorithms
         search_engines.resize(instance->n_actors);
         for (int iter = 0; iter < instance->n_actors; ++iter) {
             if (_sipp) {
-                // search_engines[iter] == std::make_shared<SIPP>();
-                throw std::runtime_error("sipp not implemented yet");
+                std::cerr << "CBS::CBS : sipp not implemented" << std::endl;
             } else {
                 search_engines[iter] = std::make_shared<SpaceTimeAStar>(instance, iter);
             }
             runtime_preprocessing = (double) (std::clock() - t) / CLOCKS_PER_SEC;
+            instance->indices_actors.resize(instance->n_actors);
 
             // mutex_helper.search_engines = search_engines;
 
@@ -42,42 +45,33 @@ namespace mess2_algorithms
         {
             paths_found_initially.resize(instance->n_actors);
 
-            // generate a random permutation of actor instances
-            std::vector<int> indices(instance->n_actors);
-            for (int iter = 0; iter < instance->n_actors; ++iter) {
-                indices[iter] = iter;
+            for (auto i = 0; i < instance->n_actors; ++i) {
+                instance->indices_actors[i] = i;
             }
 
             if (random_root) {
                 std::random_device rd;
                 std::mt19937 g(rd());
-                std::shuffle(std::begin(indices), std::end(indices), g);
+                std::shuffle(std::begin(instance->indices_actors), std::end(instance->indices_actors), g);
             }
 
             for (auto i = 0; i < instance->n_actors; ++i) {
-                instance->actors[i]->index_priority = indices[i];
-                search_engines[i]->index_actor = instance->actors[i]->index_actor;
-            }
-
-            for (auto i = 0; i < instance->n_actors; ++i) {
-                auto i1 = instance->actors[i]->index_priority;
-
-                paths_found_initially[i1] = search_engines[i1]->find_path(dummy_start, initial_constraints[i1], paths, 0.0, use_cat);
-
-                if (paths_found_initially[i1].empty()) {
-                    std::cout << "CBS::generate_root : no path exists for actor " << i1 << std::endl;
+                auto j = instance->indices_actors[i]; // everything mapped from i to j except search engines and instance->actors in indices_actors
+                assert(search_engines[j]->actor->name == instance->actors[j]->name);
+                paths_found_initially[j] = search_engines[j]->find_path(dummy_start, initial_constraints[j], paths, 0.0, use_cat);
+                if (paths_found_initially[j].empty()) {
+                    std::cerr << "CBS::generate_root : no path exists for " << instance->actors[j]->name << std::endl;
                     return false;
                 }
-                paths[i1] = paths_found_initially[i1];
-                // dummy_start->makespan = std::max(dummy_start->makespan, paths_found_initially[i].size());
-                dummy_start->g_cummulative += (double) paths_found_initially[i1][paths_found_initially[i1].size() - 1].score;
-                n_ll_expanded += search_engines[i1]->n_expanded;
-                n_ll_generated += search_engines[i1]->n_generated;
+                
+                paths[j] = paths_found_initially[j];
+                dummy_start->g_cummulative += (double) paths_found_initially[j][paths_found_initially[j].size() - 1].score;
+                n_ll_expanded += search_engines[j]->n_expanded;
+                n_ll_generated += search_engines[j]->n_generated;
             }
         } else {
             for (auto i = 0; i < instance->n_actors; ++i) {
                 paths[i] = paths_found_initially[i];
-                // dummy_start->makespan = std::max(dummy_start->makespan, paths_found_initially[i].size());
                 dummy_start->g_cummulative += (double) paths_found_initially[i][paths_found_initially[i].size() - 1].cost;
             }
         }
@@ -89,11 +83,9 @@ namespace mess2_algorithms
         n_hl_generated += 1;
         dummy_start->time_generated = n_hl_generated;
         table_of_all_nodes.push_back(dummy_start);
-        (void) find_conflicts(dummy_start);
+        // (void) find_conflicts(dummy_start);
         score_min = std::max(score_min, (double) dummy_start->g_cummulative);
         threshold_list_focal = score_min * focal_w;
-
-        // remove logic about printing for debugging
 
         return true;
     }
@@ -101,16 +93,17 @@ namespace mess2_algorithms
 
     bool CBS::generate_child(std::shared_ptr<CBSNode> &_node, const std::shared_ptr<CBSNode> &_parent)
     {
+        assert(_node->constraints.size() > 0);
         clock_t time_init = std::clock();
+
         _node->parent = _parent;
         _node->g_cummulative = _parent->g_cummulative;
         _node->depth = _parent->depth + 1;
+
         int i1, i2;
         double t1, t2, tX;
         constraint_type type;
-        assert(_node->constraints.size() > 0);
         std::tie(i1, i2, t1, t2, tX, type) = _node->constraints.front();
-
         std::shared_ptr<Key3D> key1, key2;
 
         if (type == constraint_type::LEQLENGTH) {
@@ -134,11 +127,8 @@ namespace mess2_algorithms
             //         if (path_curr[i].time < t1) {
             //             continue;
             //         }
-
             //         key2 = instance->graph->lookup_vertex(path_curr[i].index_vertex)->point->key;
             //         bool is_conflicting = find_collisions(key1, key2, instance->actors[index_actor]->radius + instance->actors[i1]->radius);
-                    
-
             //         if (is_conflicting) {
             //             auto lowerbound = paths[index_actor].back().time;
             //             if (!find_path_for_single_actor(_node, index_actor, lowerbound)) {
@@ -147,8 +137,6 @@ namespace mess2_algorithms
             //             }
             //             break;
             //         }
-
-                    
             //     }
             // }
         } else if (type == constraint_type::POSITIVE_POINT) {
@@ -161,34 +149,22 @@ namespace mess2_algorithms
             //         if (i1 == index_actor) {
             //             continue;
             //         }
-
             //         std::cout << index_actor << std::endl;
-
             //         auto path_curr = paths[i1];
             //         for (const auto &elem_curr : path_curr) {
-
-
             //             key2 = instance->graph->lookup_vertex(elem_curr.index_vertex)->point->key;
-
-                        
-
             //             auto p1 = instance->graph->lookup_point(key1->index_key);
             //             auto p2 = instance->graph->lookup_point(key2->index_key);
-
             //             auto distance = std::sqrt(
             //                 std::pow(*(p2->x)- *(p1->x), 2) +
             //                 std::pow(*(p2->y)- *(p1->y), 2) +
             //                 std::pow(*(p2->z)- *(p1->z), 2)
             //             );
-
             //             std::cout << key1->index_key << ", " << key2->index_key << ", " << distance << std::endl;
-
             //             // if (true) {
             //             //     key2 = instance->graph->lookup_vertex(elem_curr.index_vertex)->point->key;
             //             //     bool is_conflicting = find_collisions(key1, key2, tX);
-
             //             //     std::cout << "bool : " << is_conflicting << std::endl;
-
             //             //     if (is_conflicting) {
             //             //         auto lowerbound = path_curr.back().time;
             //             //         if (!find_path_for_single_actor(_node, index_actor, lowerbound)) {
@@ -199,7 +175,6 @@ namespace mess2_algorithms
             //             //     }
             //             // }
             //         }
-
             //     }
             // }
         } else if (type == constraint_type::POSITIVE_VERTEX) {
@@ -218,7 +193,7 @@ namespace mess2_algorithms
         }
 
         assert(!_node->paths.empty());
-        find_conflicts(_node);
+        (void) find_conflicts(_node);
         // heuristic_helper.compute_quick_heuristics
         runtime_generate_children += (double) (std::clock() - time_init) / CLOCKS_PER_SEC;
         return true;
@@ -261,7 +236,7 @@ namespace mess2_algorithms
 
     void CBS::find_conflicts(std::shared_ptr<CBSNode>& _node, int &_index_actor1, int &_index_actor2)
     {
-        // assume that these indices correspond to the correct priority indices stored in the actor attributes
+        // assume that both actor indices are in the j domain when called from other find_conflicts method
         auto actor1 = instance->actors[_index_actor1];
         auto actor2 = instance->actors[_index_actor2];
         auto path1 = paths[_index_actor1];
@@ -269,59 +244,43 @@ namespace mess2_algorithms
         auto counter = std::pair<int, int>(0, 0);
         auto sizes = std::pair<int, int>(static_cast<int>(path1.size()) - 1, static_cast<int>(path2.size()) - 1);
 
-        // std::pair<std::list<std::shared_ptr<Key3D>>, std::list<std::shared_ptr<Key3D>>> occupancies;
-
         auto key1 = instance->graph->lookup_key_by_index_vertex(path1[counter.first].index_vertex);
-        // occupancies.first = actor1->lookup_occupancies_symbolically(instance->graph, key1->i, key1->j, key1->k, actor1->occupancies_symbolic);
-
         auto key2 = instance->graph->lookup_key_by_index_vertex(path2[counter.second].index_vertex);
-        // occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
         
         double t1 = 0.0;
         double t2 = 0.0;
+        double t3 = 0.0;
+        double t4 = 0.0;
         std::shared_ptr<Vertex> vertex1;
         std::shared_ptr<Vertex> vertex2;
         bool is_done1 = false;
         bool is_done2 = false;
-        bool updated1 = false;
-        bool updated2 = false;
+        bool is_updated1 = false;
+        bool is_updated2 = false;
 
         while (counter != sizes) {
-            // select next lowest time instance
             t1 = path1[counter.first].time;
             t2 = path2[counter.second].time;
-
-            // std::cout << t1 << "(" << counter.first << "/" << sizes.first << ")" << " | " << t2 << "(" << counter.second << "/" << sizes.second << ")" << std::endl;
-
-
             if (t1 <= t2 && !is_done1) {
                 vertex1 = instance->graph->lookup_vertex(path1[counter.first].index_vertex);
                 key1 = vertex1->point->key;
-                // occupancies.first = actor1->lookup_occupancies_symbolically(instance->graph, key1->i, key1->j, key1->k, actor1->occupancies_symbolic);
-                updated1 = true;
-                updated2 = false;
+                is_updated1 = true;
+                is_updated2 = false;
             } else if (t2 < t1 && !is_done2) {
                 vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
                 key2 = vertex2->point->key;
-                // occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
-                updated1 = false;
-                updated2 = true;
+                is_updated1 = false;
+                is_updated2 = true;
             } else if (t1 <= t2 && is_done1 && !is_done2) {
                 vertex2 = instance->graph->lookup_vertex(path2[counter.second].index_vertex);
                 key2 = vertex2->point->key;
-                // occupancies.second = actor2->lookup_occupancies_symbolically(instance->graph, key2->i, key2->j, key2->k, actor2->occupancies_symbolic);
-                updated1 = false;
-                updated2 = true;
-                
+                is_updated1 = false;
+                is_updated2 = true;
             } else if (t2 < t1 && !is_done1 && is_done2) {
                 vertex1 = instance->graph->lookup_vertex(path1[counter.first].index_vertex);
                 key1 = vertex1->point->key;
-                // occupancies.first = actor1->lookup_occupancies_symbolically(instance->graph, key1->i, key1->j, key1->k, actor1->occupancies_symbolic);
-                updated1 = true;
-                updated2 = false;
-
-            } else {
-                //
+                is_updated1 = true;
+                is_updated2 = false;
             }
 
             if (!is_done1 && counter.first == sizes.first) {
@@ -369,6 +328,8 @@ namespace mess2_algorithms
                 auto conflict = std::make_shared<Conflict>();
                 auto edge1 = instance->graph->find_edge_by_vertex_indices(key1->index_key, key2->index_key); // edge actor 1 takes
                 auto edge2 = instance->graph->find_edge_by_vertex_indices(key2->index_key, key1->index_key); // edge actor 2 takes
+                t3 = 0.0;
+                t4 = 0.0;
 
                 auto i11 = std::max(int(0), counter.first - 2);
                 auto i12 = std::min(counter.first, sizes.first);
@@ -379,44 +340,42 @@ namespace mess2_algorithms
                 auto t12 = path1[i12].time;
                 auto t21 = path2[i21].time;
                 auto t22 = path2[i22].time;
-
-                t1 = 0.0;
-                t2 = 0.0;
+                
                 auto edges11 = instance->graph->lookup_edges(edge1->vertex_parent->index_vertex);
                 auto edges12 = instance->graph->lookup_edges(edge1->vertex_child->index_vertex);
                 auto edges21 = instance->graph->lookup_edges(edge2->vertex_parent->index_vertex);
                 auto edges22 = instance->graph->lookup_edges(edge2->vertex_child->index_vertex);
                 for (const auto &edge11 : edges11) {
-                    if (actor1->lookup_t(edge11->index_edge) > t1) {
-                        t1 = actor1->lookup_t(edge11->index_edge);
+                    if (actor1->lookup_t(edge11->index_edge) > t3) {
+                        t3 = actor1->lookup_t(edge11->index_edge);
                     }
                 }
                 for (const auto &edge12 : edges12) {
-                    if (actor1->lookup_t(edge12->index_edge) > t1) {
-                        t1 = actor1->lookup_t(edge12->index_edge);
+                    if (actor1->lookup_t(edge12->index_edge) > t3) {
+                        t3 = actor1->lookup_t(edge12->index_edge);
                     }
                 }
                 for (const auto &edge21 : edges21) {
-                    if (actor2->lookup_t(edge21->index_edge) > t1) {
-                        t2 = actor2->lookup_t(edge21->index_edge);
+                    if (actor2->lookup_t(edge21->index_edge) > t4) {
+                        t4 = actor2->lookup_t(edge21->index_edge);
                     }
                 }
                 for (const auto &edge22 : edges22) {
-                    if (actor2->lookup_t(edge22->index_edge) > t1) {
-                        t2 = actor2->lookup_t(edge22->index_edge);
+                    if (actor2->lookup_t(edge22->index_edge) > t4) {
+                        t4 = actor2->lookup_t(edge22->index_edge);
                     }
                 }
                 
-                conflict->define_as_edge(_index_actor1, _index_actor2, edge1->index_edge, t11, t12, t21, t22, t1, t2);
+                conflict->define_as_edge(_index_actor1, _index_actor2, edge1->index_edge, t11, t12, t21, t22, t3, t4);
                 assert(!conflict->constraint1.empty());
                 assert(!conflict->constraint2.empty());
                 _node->conflicts_unknown.push_back(conflict);
             }
 
-            if (counter.first < sizes.first && updated1) {
+            if (counter.first < sizes.first && is_updated1) {
                 counter.first += 1;
             }
-            if (counter.second < sizes.second && updated2) {
+            if (counter.second < sizes.second && is_updated2) {
                 counter.second += 1;
             }
         } 
@@ -426,35 +385,35 @@ namespace mess2_algorithms
     void CBS::find_conflicts(std::shared_ptr<CBSNode>& _node)
     {
         if (_node->parent != nullptr) {
-            std::list<int> actors_new;
-            for (const auto &p : _node->paths) {
-                actors_new.push_back(p.first);
+            std::list<int> indices_updated;
+            for (const auto &path : _node->paths) {
+                indices_updated.push_back(path.first); // assume that indices added to the path pair are already in the "j" domain
             }
-            (void) copy_conflicts(_node->parent->conflicts_known, _node->conflicts_known, actors_new);
-            (void) copy_conflicts(_node->parent->conflicts_unknown, _node->conflicts_unknown, actors_new);
-
-            for (auto i = actors_new.begin(); i != actors_new.end(); ++i) {
-                int index_actor1 = *i;
-                for (auto index_actor2 = 0; index_actor2 < instance->n_actors; ++index_actor2) {
-                    if (index_actor1 == index_actor2) {
+            (void) copy_conflicts(_node->parent->conflicts_known, _node->conflicts_known, indices_updated);
+            (void) copy_conflicts(_node->parent->conflicts_unknown, _node->conflicts_unknown, indices_updated);
+            for (auto i = indices_updated.begin(); i != indices_updated.end(); ++i) {
+                for (auto j = 0; j < instance->n_actors; ++j) {
+                    if (*i == j) {
                         continue;
                     }
                     bool skip = false;
-                    for (auto j = actors_new.begin(); j != i; ++j) {
-                        if (*j == index_actor2) {
+                    for (auto k = indices_updated.begin(); k != i; ++k) {
+                        if (*k == j) {
                             skip = true;
                             break;
                         }
                     }
                     if (!skip) {
-                        find_conflicts(_node, instance->actors[index_actor1]->index_priority, instance->actors[index_actor2]->index_priority);
+                        (void) find_conflicts(_node, *i, j);
                     }
                 }
             }
         } else {
-            for (auto index_actor1 = 0; index_actor1 < instance->n_actors; ++index_actor1) {
-                for (auto index_actor2 = index_actor1 + 1; index_actor2 < instance->n_actors; ++index_actor2) {
-                    find_conflicts(_node, instance->actors[index_actor1]->index_priority, instance->actors[index_actor2]->index_priority);
+            for (auto i = 0; i < instance->n_actors; ++i) {
+                for (auto j = i + 1; j < instance->n_actors; ++j) {
+                    auto k = instance->indices_actors[i];
+                    auto l = instance->indices_actors[j];
+                    (void) find_conflicts(_node, k, l);
                 }
             }
         }
@@ -511,6 +470,8 @@ namespace mess2_algorithms
         time_start = std::clock();
 
         bool is_root = generate_root();
+
+        return true;
 
         // while (!list_open.empty() && !solution_found) {
         for (auto wter = 0; wter < 0; ++wter) {
@@ -688,11 +649,9 @@ namespace mess2_algorithms
     void CBS::save_paths(const std::string &_path_goals, bool _simplify)
     {
         for (auto i = 0; i < instance->n_actors; ++i) {
-            auto path = paths[i];
-
-            std::stringstream ss;
-            ss << i + 1;
-            std::string index_actor = ss.str();
+            auto index_actor = instance->indices_actors[i];
+            auto name_actor = instance->actors[index_actor]->name;
+            auto path = paths[index_actor];          
 
             std::vector<std::shared_ptr<Vertex>> vertices;
             std::vector<std::tuple<double, double, double, double>> data;
@@ -755,7 +714,7 @@ namespace mess2_algorithms
                 data.emplace_back(*(vertices.back()->point->x), *(vertices.back()->point->y), *(vertices.back()->point->z), vertices.back()->heading);
             }
 
-            auto path_goal = _path_goals + "actor" + index_actor + ".csv";
+            auto path_goal = _path_goals + name_actor + ".csv";
             std::string path_new;
             if (!path_goal.empty() && path_goal[0] == '~') {
                 const char* home = getenv("HOME");
