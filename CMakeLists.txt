@@ -7,8 +7,12 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(mess2_algorithm_threat_static REQUIRED)
 
-include_directories(include)
+include_directories(
+  include
+  ${mess2_algorithm_threat_static_INCLUDE_DIRS}
+)
 
 add_library(
   _mess2_algorithm_plugins
@@ -25,15 +29,28 @@ add_library(
 )
 
 add_executable(demo1 src/demos/demo1.cpp)
+add_executable(demo2 src/demos/demo2.cpp)
 
 target_link_libraries(
   demo1
   _mess2_algorithm_plugins
 )
 
+target_link_libraries(
+  demo2
+  _mess2_algorithm_plugins
+)
+
 ament_target_dependencies(
   demo1
   "rclcpp"
+  "mess2_algorithm_threat_static"
+)
+
+ament_target_dependencies(
+  demo2
+  "rclcpp"
+  "mess2_algorithm_threat_static"
 )
 
 install(
@@ -43,7 +60,7 @@ install(
 )
 
 install(
-  TARGETS demo1
+  TARGETS demo1 demo2
   DESTINATION lib/${PROJECT_NAME}
 )
 

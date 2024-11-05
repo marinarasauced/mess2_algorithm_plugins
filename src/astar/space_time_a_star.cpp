@@ -44,6 +44,8 @@ namespace mess2_algorithms
             positive_constraint_sets.push_back(iter);
         }
 
+        std::cout << edge_start->index_edge << std::endl;
+
         bool keep = _constraint_table.update_unstatisfied_positive_constraint_set(positive_constraint_sets, start->unsatisfied_positive_constraint_sets, start->edge_prev->vertex_child->point->index_point, start->t_curr);
         if (!keep) {
             return path;
@@ -58,6 +60,7 @@ namespace mess2_algorithms
         double time_hold = _constraint_table.lookup_time_hold(vertex_target->point->index_point);
         lowerbound = std::max(time_hold - start->t_curr, std::max(score_min, _lowerbound));
 
+        double n_visits_max = 1;
         auto visits = std::vector<int>(instance->graph->n_vertices, 0);
 
         while (!list_open.empty())
@@ -69,10 +72,11 @@ namespace mess2_algorithms
             
             
             // // PLEASE CHANGE THIS JUST TESTING IF N VISITS SLOWS ALG DOWN A LOT
-            if (visits[curr->edge_prev->vertex_child->index_vertex] > 200) {
+            if (visits[curr->edge_prev->vertex_child->index_vertex] > n_visits_max) {
                 // std::cout << visits[curr->edge_prev->index_edge] << std::endl;
                 continue;
             } else {
+                std::cout << n_expanded << std::endl;
                 visits[curr->edge_prev->vertex_child->index_vertex] += 1;
             }
 
@@ -102,7 +106,7 @@ namespace mess2_algorithms
 
                 auto dh = actor->lookup_h(edge->vertex_child->point->index_point);
                 auto h_next = curr->h_curr + dh * dt;
-                h_next = 0.0;
+                // h_next = 0.0;
                 // if score next is greater than allowable score, continue
 
                 auto next = std::make_shared<AStarNode>(g_next, h_next, t_next, static_cast<int>(table_of_all_nodes.size()), curr, edge);
