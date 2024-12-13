@@ -429,8 +429,14 @@ namespace mess2_algorithms
          */
         int find_index_vertex_by_xyz_and_heading(double _x, double _y, double _z, double _theta)
         {
-            for (const auto &vertex : vertices) {
-                if (*(vertex->point->x) == _x && *(vertex->point->y) == _y && *(vertex->point->z) == _z && vertex->heading == _theta) {
+            for (auto vertex : vertices) {
+                double x = *(vertex->point->x);
+                double y = *(vertex->point->y);
+                double z = *(vertex->point->z);
+                double theta = vertex->heading;
+                // std::cout << x << ", " << y << ", " << z << ", " << theta << " | " << _x << ", " << _y << ", " << _z << ", " << _theta << " | " << (x == _x) << (y == _y) << (z == _z) << (theta == _theta) << std::endl;
+
+                if (std::abs(x - _x) < 1e-9 && std::abs(y - _y) < 1e-9 && std::abs(z - _z) < 1e-9 && std::abs(theta - _theta) < 1e-9) {
                     return vertex->index_vertex;
                 }
             }

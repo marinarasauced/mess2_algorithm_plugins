@@ -70,7 +70,7 @@ public:
             graph,
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 0.0, 0.0, 0.0), 
             graph->find_index_vertex_by_xyz_and_heading(0.0, 4.0, 0.0, 0.0),
-            2.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
+            0.1, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
         actor1->name = "actor1";
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor1->runtime_build);
@@ -82,7 +82,7 @@ public:
             graph,
             graph->find_index_vertex_by_xyz_and_heading(-5.0, -5.0, 0.0, 90.0), 
             graph->find_index_vertex_by_xyz_and_heading(-5.0, 5.0, 0.0, 90.0),
-            1.0, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
+            0.1, 1.0, 1.0, 0.01, 0.01, 1.0, 1.0
         );
         actor2->name = "actor2";
         RCLCPP_INFO(this->get_logger(), "\truntime build actor : %f", actor2->runtime_build);

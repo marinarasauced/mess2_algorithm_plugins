@@ -129,7 +129,7 @@ public:
 
         result = cbs.solve(10.0);
 
-
+        RCLCPP_INFO(this->get_logger(), "solved");
 
 
 

@@ -30,6 +30,7 @@ add_library(
 
 add_executable(demo1 src/demos/demo1.cpp)
 add_executable(demo2 src/demos/demo2.cpp)
+add_executable(demo3 src/demos/demo3.cpp)
 
 target_link_libraries(
   demo1
@@ -38,6 +39,11 @@ target_link_libraries(
 
 target_link_libraries(
   demo2
+  _mess2_algorithm_plugins
+)
+
+target_link_libraries(
+  demo3
   _mess2_algorithm_plugins
 )
 
@@ -49,6 +55,12 @@ ament_target_dependencies(
 
 ament_target_dependencies(
   demo2
+  "rclcpp"
+  "mess2_algorithm_threat_static"
+)
+
+ament_target_dependencies(
+  demo3
   "rclcpp"
   "mess2_algorithm_threat_static"
 )
@@ -60,7 +72,7 @@ install(
 )
 
 install(
-  TARGETS demo1 demo2
+  TARGETS demo1 demo2 demo3
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -57,6 +57,7 @@ namespace mess2_algorithms
 
             for (auto i = 0; i < instance->n_actors; ++i) {
                 auto j = instance->indices_actors[i]; // everything mapped from i to j except search engines and instance->actors in indices_actors
+                std::cout << "generating root" << j << std::endl;
                 assert(search_engines[j]->actor->name == instance->actors[j]->name);
                 paths_found_initially[j] = search_engines[j]->find_path(dummy_start, initial_constraints[j], paths, 0.0, use_cat);
                 if (paths_found_initially[j].empty()) {
@@ -83,7 +84,7 @@ namespace mess2_algorithms
         n_hl_generated += 1;
         dummy_start->time_generated = n_hl_generated;
         table_of_all_nodes.push_back(dummy_start);
-        // (void) find_conflicts(dummy_start);
+        (void) find_conflicts(dummy_start);
         score_min = std::max(score_min, (double) dummy_start->g_cummulative);
         threshold_list_focal = score_min * focal_w;
 
@@ -470,11 +471,11 @@ namespace mess2_algorithms
         time_start = std::clock();
 
         bool is_root = generate_root();
+        std::cout << "done generate root" << std::endl;
+        bool first_iter = true;
 
-        return true;
-
-        // while (!list_open.empty() && !solution_found) {
-        for (auto wter = 0; wter < 0; ++wter) {
+        while (!list_open.empty() && !solution_found) {
+        // for (auto wter = 0; wter < 0; ++wter) {
 
             (void) update_list_focal();
             if (score_min >= cost_upperbound) {
@@ -495,12 +496,13 @@ namespace mess2_algorithms
             list_open.erase(curr->handle_open);
             update_paths(curr);
 
-            if (curr->conflicts_unknown.size() + curr->conflicts_known.size() == 0) {
+            if (curr->conflicts_unknown.size() + curr->conflicts_known.size() == 0 && first_iter != true) {
                 solution_found = true;
                 solution_cost = curr->g_cummulative;
                 goal_node = curr;
                 break;
             }
+            first_iter = false;
 
             // some heuristic logic that i am temporarilly omitting
 
@@ -585,6 +587,15 @@ namespace mess2_algorithms
                 for (auto i = 0; i < 2; ++i) {
                     if (i > 0) { paths = copy; }
                     solved[i] = generate_child(children[i], curr);
+                    if (solved[i]) {
+                        children[i]->handle_open = list_open.push(children[i]);
+                        n_hl_generated++;
+                        children[i]->time_generated = n_hl_generated;
+                        if (children[i]->g_cummulative + children[i]->h_cummulative <=threshold_list_focal) {
+                            children[i]->handle_focal = list_focal.push(children[i]);
+                        }
+                        table_of_all_nodes.push_back(children[i]);
+                    }
                 }
             }
             
